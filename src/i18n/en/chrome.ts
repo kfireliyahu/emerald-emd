@@ -230,5 +230,8 @@ export const chrome = {
     more: '{n} more',
     fewer: 'Fewer',
     share: '{n}% of the whole',
+    panelWidth: 'Panel width',
+    panelWidthValue: '{width} pixels wide',
+    panelWidthTitle: 'Drag to widen or narrow · double-click for the usual width',
   },
 } as const

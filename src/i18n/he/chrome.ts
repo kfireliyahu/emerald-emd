@@ -230,5 +230,8 @@ export const chrome: Translation<'chrome'> = {
     more: 'עוד {n}',
     fewer: 'פחות',
     share: '{n}% מהכול',
+    panelWidth: 'רוחב החלונית',
+    panelWidthValue: 'ברוחב {width} פיקסלים',
+    panelWidthTitle: 'גרירה להרחבה או להצרה · לחיצה כפולה לרוחב הרגיל',
   },
 }

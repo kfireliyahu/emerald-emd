@@ -1827,15 +1827,31 @@ input[type="number"] {
 /* The side panel (`SidePanel`): a column of the page's grid where the window
    has room for one, floating over the page where it has not (A's critique:
    squeezing the month to make room lost it). 420px is a measure of the layout,
-   like the rail's widths, not a step. */
+   like the rail's widths, not a step — and since M64 F69 (D-644) only the
+   default: the reader drags the inner edge (`PanelEdge`) and the width comes in
+   as `--fc-panel-width`. The floor (360px, where a form still works) and the
+   ceiling (half the window, so the page stays readable) are `SidePanel`'s, and
+   guarded here for a window narrowed after the drag. The body scrolls, not the
+   panel, so the edge stays put. No transition on the width: a dragged width
+   never animates. */
 .fc-side-panel {
-  width: 420px;
-  max-width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: var(--fc-panel-width, 420px);
+  min-width: min(360px, 100%);
+  max-width: min(50vw, 100%);
   min-height: 100%;
-  overflow: auto;
-  padding: var(--spacing-6) var(--spacing-6) var(--spacing-12);
+  overflow: hidden;
   background: var(--color-background);
   border-inline-start: 1px solid var(--color-hairline);
+}
+.fc-side-panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--spacing-6) var(--spacing-6) var(--spacing-12);
 }
 @media (max-width: 1359px) {
   .fc-side-panel {
@@ -1847,10 +1863,50 @@ input[type="number"] {
   }
 }
 
+/* A panel's inner edge (`PanelEdge`, D-644): an 8px strip over the panel's
+   start edge, the side facing the page — mirrored in Hebrew by the logical
+   inset — that shows its hairline as `accent` while it is hovered, dragged or
+   focused. The cursor and no text selection hold over the whole window while a
+   drag is under way (`fc-resizing`), so the pointer can run ahead of the edge. */
+.fc-panel-edge {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: 1;
+  width: var(--spacing-2);
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+}
+.fc-panel-edge::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 2px;
+  background: transparent;
+  transition: background-color var(--duration-micro) var(--ease-out);
+}
+.fc-panel-edge:hover::after,
+.fc-panel-edge:focus-visible::after,
+.fc-resizing .fc-panel-edge::after {
+  background: var(--color-accent);
+}
+.fc-panel-edge:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+.fc-resizing,
+.fc-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
 /* The specimen page shows a side panel where it stands, not floating. */
 .fc-side-panel-docked .fc-side-panel {
-  position: static;
+  position: relative;
   width: auto;
+  max-width: 100%;
   min-height: 0;
   box-shadow: none;
 }

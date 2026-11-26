@@ -2,10 +2,12 @@ import { Fragment, useEffect, useLayoutEffect, useRef, type ReactNode } from 're
 import { useLocation, useNavigate, useOutlet, useOutletContext, useResolvedPath } from 'react-router-dom'
 
 import { useT } from '@/i18n/current.ts'
+import { PanelEdge } from '@/ui/components/PanelEdge.tsx'
 import { historyIndex } from '@/ui/HistoryArrows.tsx'
 import { EASING, MOTION_MS, motionOn } from '@/ui/motion/motion.ts'
 import { LAYOUT_MOTION } from '@/ui/motion/settle.ts'
 import { useWindowTaken } from '@/ui/useFullWindow.ts'
+import { panelWidthStyle, usePanelWidth, type PanelBounds } from '@/ui/usePanelWidth.ts'
 
 /**
  * A list, and the thing it names, in one window (D-130).
@@ -111,6 +113,9 @@ export function ListDetail({ children, overlay = false }: { children: ReactNode;
    */
   const pane = useRef<HTMLElement>(null)
   const beside = !overlay && !taken
+  // **The pane's width is the reader's** (M64 F69, D-644): its inner edge drags,
+  // and the width is kept for every list's pane across restarts.
+  const width = usePanelWidth('pane')
   const was = useRef(showing)
   useLayoutEffect(() => {
     // Opened here, not arrived with: a screen opened on a fund fades in whole.
@@ -174,8 +179,8 @@ export function ListDetail({ children, overlay = false }: { children: ReactNode;
           ref={pane}
           data-motion-close={beside ? '' : undefined}
           // Wide enough for a figure row and a table of readings, capped as a
-          // share so it can never crush the list it belongs to — at the
-          // window's minimum width the list still gets more than half. And the
+          // share so it can never crush the list it belongs to — however wide
+          // the reader drags it (D-644), the list keeps 45% of the room. And the
           // whole window, with no rule down its side, while a flow has it.
           className={
             taken
@@ -183,11 +188,13 @@ export function ListDetail({ children, overlay = false }: { children: ReactNode;
               : overlay
                 ? // Over the list rather than beside it: the list keeps its whole width, which a table of
                   // seven columns needs, and the drawer is something you look at and put away.
-                  'fc-pop-enter absolute top-0 end-0 bottom-0 z-[15] flex min-h-0 w-[30rem] max-w-full flex-col border-s border-hairline-strong bg-background shadow-pop'
-                : 'fc-view-enter flex min-h-0 w-[30rem] max-w-[45%] min-w-[20rem] shrink-0 flex-col border-s border-hairline'
+                  'fc-pop-enter absolute top-0 end-0 bottom-0 z-[15] flex min-h-0 w-[var(--fc-panel-width,30rem)] max-w-[min(100%,max(30rem,60%))] min-w-[min(20rem,100%)] flex-col border-s border-hairline-strong bg-background shadow-pop'
+                : 'fc-view-enter relative flex min-h-0 w-[var(--fc-panel-width,30rem)] max-w-[55%] min-w-[20rem] shrink-0 flex-col border-s border-hairline'
           }
+          style={taken ? undefined : panelWidthStyle(width)}
           aria-label={overlay ? t('wealth.pane.details') : undefined}
         >
+          {!taken && <PanelEdge kind="pane" panel={pane} fallback={paneWidth()} bounds={overlay ? overlayBounds : besideBounds} />}
           {/* Keyed by its address: another fund is another detail, arriving with
               its own fade and none of the last one's half-typed state — which is
               what remounting the whole screen used to give it for free. */}
@@ -230,4 +237,30 @@ export function ClosePane() {
       {t('wealth.pane.close')}
     </button>
   )
+}
+
+/** `n` rem in CSS pixels: the pane's classes are in rem, and the root's size is the reader's. */
+const rem = (n: number): number => n * (typeof document === 'undefined' ? 16 : Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16)
+
+/** The pane's width before anything is dragged: 30rem, as its classes say. */
+const paneWidth = (): number => rem(30)
+
+/** What the pane is a share of: the list and the pane together. */
+const roomOf = (pane: HTMLElement | null): number => pane?.parentElement?.clientWidth ?? (typeof window === 'undefined' ? rem(60) : window.innerWidth)
+
+/**
+ * **Beside the list** (D-644): 20rem at the narrowest, and 55% of the room at
+ * the widest, so the list it belongs to always keeps 45% — its seven columns
+ * still read. Its default stays 30rem; before the drag the cap was 45%, which
+ * at a 1280px window left little room to widen.
+ */
+function besideBounds(pane: HTMLElement | null): PanelBounds {
+  const floor = rem(20)
+  return { min: floor, max: Math.max(floor, Math.floor(roomOf(pane) * 0.55)) }
+}
+
+/** **Over the list** (the goals' drawer): up to 60% of the list, or its 30rem where the list is narrower than that allows. */
+function overlayBounds(pane: HTMLElement | null): PanelBounds {
+  const room = roomOf(pane)
+  return { min: Math.min(rem(20), room), max: Math.min(room, Math.max(paneWidth(), Math.floor(room * 0.6))) }
 }

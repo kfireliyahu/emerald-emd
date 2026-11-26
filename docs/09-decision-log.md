@@ -539,6 +539,7 @@ written out here.
 | D-639 | 2026-11-26 | Wealth's details spend only the list's seven type steps — a label is a caption, a figure that does not answer its section is the heading step, the one that does is the kit's tile step — and one primary: the fund detail's Add reading is secondary beside the list's; a detail route is budgeted by `:id`, whichever row it opens; a wealth tag is text and a dot; and a holding reading's refusal is a code and its parts, said by the screen | M64 |
 | D-640 | 2026-11-26 | A debt's payoff month is one calculation, `payoffMonth` in `src/domain/debt.ts`, which the debt's detail and the Debts list both read: the payments still to make start in the month after the newest one already recorded, or this month while this month's has not landed | M64 |
 | D-642 | 2026-11-26 | Every route is inside its density budget and none is exempt: the last, reading files onto a format, is redesigned with its question as its title and choosing files as its action, and its ceiling counts the two pickers the old measure missed; a question asked where its button was behaves as a popover (`useAskHere`); the page's pictures of the ledger are retaken on the redesigned screens | M64 |
+| D-644 | 2026-11-26 | A side panel's width is the reader's: its inner edge drags, steps with ← and → and goes back to its default on a double-click; the width is a preference of the machine (`localStorage`, never the document), one for every side panel and one for the wealth lists' pane; between a floor of 360px and a ceiling of half the window | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -2312,3 +2313,40 @@ at the icon (Q32, already asked). The rest of the intake page is still English (
 measured on year.emd when another document fills them: Packs on custom.emd, which keeps no ledger
 (209 words, 3 actions, 5 colours against 200, 2 and 4), and a fund's detail on showcase.emd (22
 actions against 20) — F68.
+
+## D-644 · 2026-11-26 · A side panel's width is the reader's: its inner edge drags, steps with ← and → and goes back to its default on a double-click; the width is a preference of the machine (`localStorage`, never the document), one for every side panel and one for the wealth lists' pane; between a floor of 360px and a ceiling of half the window <a id="d-644"></a>
+
+**Context.** M64 F69. The maintainer, 2026-11-26: *"i wanna make the sidebars that opened able to
+change width by the user to read easily."* Every side panel was a fixed 420px (`SidePanel`), and the
+wealth lists' pane a fixed 30rem (`ListDetail`); a long category name, a reading's table or a
+paycheck's parts had no way to get more room.
+
+**Decision.**
+
+1. **The inner edge is a handle** (`PanelEdge`, `src/ui/components/`): an 8px strip on the panel's
+   inline start, the side facing the page, whose hairline turns `accent` when hovered, focused or
+   dragged. It drags with the mouse; focused, it is a `separator` that says its width in pixels, and
+   ← and → move the edge the way they point (16px, 64px with Shift), Home and End to the floor and
+   the ceiling; a double-click forgets the width and the panel is back at its default. In Hebrew the
+   mirrored edge is the one that drags. While the mouse drags, the handle writes `--fc-panel-width`
+   straight onto the panel — one layout a move, no render — and the width is kept once, on release.
+   **A dragged width never animates**: no transition is added.
+2. **The width is remembered across restarts, on the machine** (`src/ui/usePanelWidth.ts`, through
+   `readPreference`/`writePreference` like the theme and the sidebar, D-115, D-130): a per-viewer
+   convenience, never written into the document. **One width per kind of panel, not per panel**:
+   every `SidePanel` opens at the width the last one was dragged to (`fc-panel-width.side`), and the
+   funds', goals' and debts' pane at its own (`fc-panel-width.pane`) — the reader sets how wide they
+   like to read once.
+3. **A floor and a ceiling.** A side panel: 360px, where a `PanelForm`'s fields, amounts and two
+   buttons still sit in one column, to half the window, so the page it explains stays readable beside
+   it or behind it. The wealth pane keeps its 20rem floor and 30rem default, and its cap beside the list
+   rises from 45% to 55% of the room, so the list keeps 45% and the pane can widen at all in a
+   1280px window; over the goals list it goes up to 60% of it (or its 30rem where that is less).
+   tokens.css guards the same bounds for a window narrowed after the drag.
+4. **The side panel's body scrolls, not the panel** (`.fc-side-panel-body`), so the edge stays where
+   it is while the rows scroll past. A `PanelForm`'s grids already follow the form's width
+   (`@container`), so a widened panel lays a form out in two columns by itself.
+
+**Left as it is.** Panels that are a page's own permanent column (Connections' sentences) did not
+open beside the page and take no handle. Defaults the driver set and the maintainer may change: one
+width for every side panel rather than one per panel, the 360px floor and the half-window ceiling.

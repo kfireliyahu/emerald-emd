@@ -21,7 +21,7 @@ import { FIELD } from '@/ui/components/fieldLook.ts'
  * and `MoreFields`, the rest, folded until asked for and grown in place.
  *
  * **Its grids follow the form's width, not the window's** (`@container`):
- * inside the 420px panel a grid is one column; the same fields in a page of
+ * inside the 420px panel (its default width, D-644) a grid is one column; the same fields in a page of
  * their own (a fund report read through `FlowFrame`) take two or three.
  *
  * The Save is a secondary button: the page behind the panel keeps its own one
