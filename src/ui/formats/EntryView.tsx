@@ -23,8 +23,8 @@ import { draftOfMembers, withField, type RowDraft } from '@/domain/format/rowDra
 import { PERCENT_PLACES, readPercent } from '@/domain/format/percent.ts'
 import type { UnitTable } from '@/domain/format/unit.ts'
 import {
-  SHOW_AS_HINT,
-  SHOW_AS_LABEL,
+  showAsHintKey,
+  showAsKey,
   entryLabel,
   noteWords,
   entryLayout,
@@ -40,6 +40,7 @@ import {
   type ShowAs,
 } from '@/domain/format/view.ts'
 import { useT, type Translate } from '@/i18n/current.ts'
+import { translate } from '@/i18n/catalogue.ts'
 import { countKey } from '@/i18n/count.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Phrase } from '@/ui/components/Phrase.tsx'
@@ -1222,9 +1223,9 @@ function ShowAsMenu({
               }}
             >
               <span className="w-3.5 text-accent">{each === way ? '✓' : ''}</span>
-              {SHOW_AS_LABEL[each]}
-              {SHOW_AS_HINT[each] !== undefined && (
-                <span className="ms-auto ps-3 text-caption text-ink-secondary">{SHOW_AS_HINT[each]}</span>
+              {t(showAsKey(each))}
+              {showAsHintKey(each) !== undefined && (
+                <span className="ms-auto ps-3 text-caption text-ink-secondary">{t(showAsHintKey(each) ?? showAsKey(each))}</span>
               )}
             </button>
           ))}
@@ -2584,9 +2585,9 @@ function bounds(column: ColumnDeclaration, t: Translate): string {
  * exists to prevent, and a column of bare figures is exactly where it would
  * happen.
  */
-export function cellText(value: ReadValue): string {
+export function cellText(value: ReadValue, t: Translate = (key, parts) => translate('en', key, parts)): string {
   if (value === undefined) return ''
-  if (typeof value === 'boolean') return value ? 'yes' : 'no'
+  if (typeof value === 'boolean') return t(value ? 'formats.cell.yes' : 'formats.cell.no')
   if (typeof value === 'number') return String(value)
   if (typeof value === 'string') return value
   // A list's ids; a surface that has the names prints those instead (M27 U2).

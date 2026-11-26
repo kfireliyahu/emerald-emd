@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
+import { useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
-import { Button } from '@/ui/components/Button.tsx'
 import { useDismiss } from '@/ui/components/useDismiss.ts'
 
 import type { ColumnChoice } from './addressFilter.ts'
@@ -37,6 +37,7 @@ export function ColumnsChoice({
   const [mine, setMine] = useState(chosen)
   const said = JSON.stringify(chosen)
   useEffect(() => setMine(JSON.parse(said) as ColumnChoice), [said])
+  const t = useT()
   const offered = formats.filter((each) => each.columns.length > 0)
   if (offered.length === 0) return null
   const changed = offered.some((each) => mine[each.format.name] !== undefined)
@@ -51,27 +52,28 @@ export function ColumnsChoice({
 
   return (
     <span ref={box} className="relative inline-flex" onKeyDown={dismiss}>
-      <Button
-        variant="secondary"
-        size="sm"
+      {/* A text action in the views' strip, as Fold all is beside it (M64 F17, D-632). */}
+      <button
+        type="button"
+        className="fc-text-action text-caption"
         aria-expanded={open}
         aria-haspopup="dialog"
-        title="Which columns each line draws"
+        title={t('views.columns.hint')}
         onClick={() => setOpen((was) => !was)}
       >
-        {changed ? 'Columns ·' : 'Columns'}
-      </Button>
+        {changed ? t('views.columns.changed') : t('views.columns.label')}
+      </button>
       {open && (
         <div
           role="dialog"
-          aria-label="Columns"
-          className="fc-pop-enter absolute top-full end-0 z-30 mt-1 flex max-h-[70vh] w-64 flex-col gap-3 overflow-y-auto rounded-md border border-hairline-strong bg-elevated p-2 text-start text-[13px] font-normal whitespace-normal shadow-[var(--shadow-pop)]"
+          aria-label={t('views.columns.label')}
+          className="fc-pop-enter absolute top-full end-0 z-30 mt-1 flex max-h-[70vh] w-64 flex-col gap-3 overflow-y-auto rounded-md border border-hairline-strong bg-elevated p-2 text-start text-body font-normal text-ink whitespace-normal shadow-[var(--shadow-pop)]"
         >
           {offered.map((each) => {
             const shown = mine[each.format.name] ?? each.drawn
             const own = mine[each.format.name] !== undefined
             return (
-              <section key={each.format.name} aria-label={`${each.format.title}, its columns`} className="flex flex-col">
+              <section key={each.format.name} aria-label={t('views.columns.of', { title: each.format.title })} className="flex flex-col">
                 <div className="flex items-baseline gap-2 px-1 pb-1">
                   <Bidi className="fc-label min-w-0 flex-1 truncate">{each.format.title}</Bidi>
                   {own && (
@@ -80,7 +82,7 @@ export function ColumnsChoice({
                       className="text-caption text-ink-secondary underline decoration-hairline underline-offset-2 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
                       onClick={() => write(each, undefined)}
                     >
-                      As declared
+                      {t('views.columns.asDeclared')}
                     </button>
                   )}
                 </div>

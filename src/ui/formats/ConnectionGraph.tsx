@@ -7,7 +7,10 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 
+import { countKey } from '@/i18n/count.ts'
+import { useT } from '@/i18n/current.ts'
 import {
+  nounOf,
   samePort,
   type Edge,
   type GraphNode,
@@ -148,6 +151,7 @@ export function ConnectionGraph({
    */
   focus?: readonly string[] | undefined
 }) {
+  const t = useT()
   const [moving, setMoving] = useState<Moving | undefined>(undefined)
   const shown = moving === undefined ? places : withMove(places, moving)
   const placement = placeGraph(nodes, { packOf, opened, places: shown })
@@ -625,8 +629,8 @@ export function ConnectionGraph({
             <div className="flex border-b border-hairline" style={{ height: HEAD_HEIGHT }}>
               <button
                 type="button"
-                aria-label={`Move ${placed.node.title}`}
-                title={`Move ${placed.node.title} — drag, or the arrow keys`}
+                aria-label={t('connections.graph.move', { title: placed.node.title })}
+                title={t('connections.graph.moveHint', { title: placed.node.title })}
                 className="flex w-6 shrink-0 cursor-grab items-center justify-center text-ink-secondary hover:bg-surface hover:text-ink active:cursor-grabbing"
                 {...dragHandlers('FORMAT', placed.node.name, placed)}
               >
@@ -641,7 +645,7 @@ export function ConnectionGraph({
                   touch(placed.node.row.port)
                 }}
                 onKeyDown={(event) => onKey(event, () => touch(placed.node.row.port), onArm)}
-                title={placed.node.row.says}
+                title={t('connections.graph.dropHere', { title: placed.node.title, words: t('connections.belongsTo') })}
                 className={`flex min-w-0 flex-1 items-center gap-2 pe-3 text-start ${
                   armed !== undefined && samePort(armed, placed.node.row.port)
                     ? 'bg-accent-soft'
@@ -660,6 +664,7 @@ export function ConnectionGraph({
               <PortButton
                 key={`${port.port.kind}-${port.label}-${index}`}
                 port={port}
+                owner={placed.node.title}
                 armed={armed !== undefined && samePort(armed, port.port)}
                 onTouch={() => touch(port.port)}
                 onLetGo={onArm}
@@ -674,16 +679,16 @@ export function ConnectionGraph({
         className="absolute bottom-3 end-3 flex items-center gap-1 border border-hairline bg-elevated px-1 py-0.5"
         style={{ borderRadius: 'var(--radius-control)' }}
       >
-        <IconAction label="Zoom out" onClick={() => zoomCentre(1 / 1.2)}>
+        <IconAction label={t('connections.graph.zoomOut')} onClick={() => zoomCentre(1 / 1.2)}>
           <path d="M5 12h14" />
         </IconAction>
         <span className="w-10 text-center text-caption tabular-nums text-ink-secondary">
           {Math.round(view.zoom * 100)}%
         </span>
-        <IconAction label="Zoom in" onClick={() => zoomCentre(1.2)}>
+        <IconAction label={t('connections.graph.zoomIn')} onClick={() => zoomCentre(1.2)}>
           <path d="M12 5v14M5 12h14" />
         </IconAction>
-        <IconAction label="Fit everything in view" onClick={fit}>
+        <IconAction label={t('connections.graph.fit')} onClick={fit}>
           <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
         </IconAction>
       </div>
@@ -724,6 +729,7 @@ function Group({
   handlers: DragHandlers
   onOpen: () => void
 }) {
+  const t = useT()
   const count = group.members.length
   return (
     <div
@@ -740,7 +746,7 @@ function Group({
     >
       <button
         type="button"
-        title={`The ${group.pack} pack's formats — ${group.members.join(', ')}. Press to open, drag to move, or the arrow keys.`}
+        title={t('connections.graph.packHint', { pack: group.pack, members: group.members.join(', ') })}
         className="flex h-full w-full cursor-grab flex-col items-start justify-center px-3 text-start hover:bg-elevated active:cursor-grabbing"
         {...handlers}
         onKeyDown={(event) => {
@@ -756,7 +762,7 @@ function Group({
           <Bidi>{group.pack}</Bidi>
         </span>
         <span className="text-caption text-ink-secondary">
-          {count === 1 ? '1 format inside' : `${String(count)} formats inside`} — press to open
+          {t(countKey('connections.graph.packInside', count), { count })}
         </span>
       </button>
     </div>
@@ -786,16 +792,34 @@ function Grip() {
  */
 function PortButton({
   port,
+  owner,
   armed,
   onTouch,
   onLetGo,
 }: {
   port: GraphPort
+  /** The title of the format the endpoint is on, which its two new-connection words name. */
+  owner: string
   armed: boolean
   onTouch: () => void
   onLetGo: (port: Port | undefined) => void
 }) {
+  const t = useT()
   const proposing = port.port.kind === 'NEW_LINK' || port.port.kind === 'NEW_FIGURE'
+  // The two words a new connection starts from are this screen's, so they are
+  // said here; a column's or a total's own name stays as the document wrote it.
+  const label =
+    port.port.kind === 'NEW_LINK'
+      ? t('connections.belongsTo')
+      : port.port.kind === 'NEW_FIGURE'
+        ? t('connections.hasMany')
+        : port.label
+  const says =
+    port.port.kind === 'NEW_LINK'
+      ? t('connections.graph.belongsToHint', { each: nounOf(owner), title: owner })
+      : port.port.kind === 'NEW_FIGURE'
+        ? t('connections.graph.hasManyHint', { each: nounOf(owner), title: owner })
+        : port.says
   return (
     <button
       type="button"
@@ -813,7 +837,7 @@ function PortButton({
       }}
       onKeyDown={(event) => onKey(event, onTouch, onLetGo)}
       style={{ height: PORT_HEIGHT }}
-      title={port.says}
+      title={says}
       className={`flex w-full items-center gap-2 px-3 text-start text-caption ${
         armed ? 'bg-accent-soft' : 'hover:bg-surface'
       } ${proposing ? 'text-accent' : port.edges > 0 ? 'text-ink' : 'text-ink-secondary'}`}
@@ -822,7 +846,7 @@ function PortButton({
       {port.port.kind === 'FIGURE' && <span className="shrink-0 text-ink-secondary">Σ</span>}
       {proposing && <span className="shrink-0">+</span>}
       <span className="flex min-w-0">
-        <Bidi className="min-w-0 truncate">{port.label}</Bidi>
+        <Bidi className="min-w-0 truncate">{label}</Bidi>
       </span>
       {port.detail !== undefined && (
         <span className="ms-auto flex min-w-0 shrink-0 whitespace-nowrap text-ink-secondary">
@@ -850,6 +874,7 @@ function Ends({
   tone: string
   words: boolean
 }) {
+  const t = useT()
   const out = (end: PlacedPort): number => (end.side === 'RIGHT' ? 1 : -1)
   const m = out(many)
   const o = out(one)
@@ -870,7 +895,7 @@ function Ends({
             textAnchor={m > 0 ? 'start' : 'end'}
             className="fill-[var(--color-ink-secondary)] text-label"
           >
-            many
+            {t('connections.graph.many')}
           </text>
           <text
             x={one.x + o * 12}
@@ -878,7 +903,7 @@ function Ends({
             textAnchor={o > 0 ? 'start' : 'end'}
             className="fill-[var(--color-ink-secondary)] text-label"
           >
-            one
+            {t('connections.graph.one')}
           </text>
         </>
       )}

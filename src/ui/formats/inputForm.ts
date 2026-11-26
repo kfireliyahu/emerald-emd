@@ -12,6 +12,12 @@
 import type { ColumnDeclaration, FormatDeclaration } from '@/domain/format/declaration.ts'
 import { dayOfDefault, defaultRefusal, ONE_DAY_WORDS, type InputShape } from '@/domain/format/inputView.ts'
 import { entryLabel } from '@/domain/format/view.ts'
+import { translate } from '@/i18n/catalogue.ts'
+import { countKey } from '@/i18n/count.ts'
+import type { Translate } from '@/i18n/current.ts'
+
+/** The words a caller that has no `t` gets: the English, as a conversation reads them. */
+const english: Translate = (key, parts) => translate('en', key, parts)
 
 /** One value an input view sets without asking it: its column and the default as written. */
 export interface InputSet {
@@ -61,7 +67,7 @@ export function dayWordOf(column: ColumnDeclaration, held: unknown): string | un
 }
 
 /** The sentence a range word earns as a date's default (U1 §5). */
-export const ONE_DAY = 'A default names one day: today, yesterday, tomorrow or a date.'
+export const ONE_DAY = english('formats.input.oneDay')
 
 /** Why one default cell is refused, at its row in Fields — or nothing. Empty is no default. */
 export function defaultCellRefusal(column: ColumnDeclaration, text: string): string | undefined {
@@ -71,8 +77,8 @@ export function defaultCellRefusal(column: ColumnDeclaration, text: string): str
 }
 
 /** *This view does not ask amount, which every card charge needs.* */
-export function lackingSentence(declaration: FormatDeclaration, column: ColumnDeclaration): string {
-  return `This view does not ask ${entryLabel(column)}, which every ${declaration.title.toLowerCase()} needs`
+export function lackingSentence(declaration: FormatDeclaration, column: ColumnDeclaration, t: Translate = english): string {
+  return t('formats.input.lacking', { column: entryLabel(column), one: declaration.title.toLowerCase() })
 }
 
 /** A new input view's name: the format's title, or *Card charge 2* when that is taken. */
@@ -135,6 +141,6 @@ export function fieldsRows(declaration: FormatDeclaration, shape: InputShape): r
 }
 
 /** *Kept: 2 rows link to it.* — an Undo refused because other rows name the one just added. */
-export function keptSentence(count: number): string {
-  return count === 1 ? 'Kept: 1 row links to it.' : `Kept: ${String(count)} rows link to it.`
+export function keptSentence(count: number, t: Translate = english): string {
+  return t(countKey('formats.input.kept', count), { count })
 }

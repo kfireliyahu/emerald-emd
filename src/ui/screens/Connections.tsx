@@ -13,7 +13,6 @@ import {
   edgesOf,
   edgeWords,
   graphOf,
-  NEW_LINK_WORDS,
   proposalFor,
   type Edge,
   type Port,
@@ -33,6 +32,7 @@ import { ConnectionGraph } from '@/ui/formats/ConnectionGraph.tsx'
 import { ConnectionPanel } from '@/ui/formats/ConnectionPanel.tsx'
 import { FORMATS_PATH } from '@/ui/nav.ts'
 import { SidePanel } from '@/ui/components/SidePanel.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { countKey } from '@/i18n/count.ts'
 import { useT, type Translate } from '@/i18n/current.ts'
 
@@ -110,17 +110,22 @@ export function Connections() {
   }, [db, revision])
 
   if (db === undefined || data === undefined) {
-    return <Centered>Open a document to see the connections between its formats.</Centered>
+    return <Centered>{t('connections.screen.noDocument')}</Centered>
   }
 
   if (data.declarations.length === 0) {
     return (
       <Centered>
-        This document declares no formats yet. A connection is between two of them, so{' '}
-        <Link to={FORMATS_PATH} className="text-accent">
-          declare one
-        </Link>{' '}
-        first.
+        <Phrase
+          text={t('connections.screen.noFormats')}
+          parts={{
+            declare: (
+              <Link to={FORMATS_PATH} className="text-accent">
+                {t('connections.screen.declareOne')}
+              </Link>
+            ),
+          }}
+        />
       </Centered>
     )
   }
@@ -204,17 +209,17 @@ export function Connections() {
                 setOpened((now) => new Set([...now].filter((each) => each !== pack)))
               }
             >
-              Fold <Bidi>{pack}</Bidi>
+              <Phrase text={t('connections.screen.fold')} parts={{ pack: <Bidi>{pack}</Bidi> }} />
             </button>
           ))}
           {data.places.length > 0 && (
             <button
               type="button"
               className="text-accent"
-              title="Forget where every bubble was moved, and lay them out by what names what"
+              title={t('connections.screen.arrangeHint')}
               onClick={() => mutate((database) => clearGraphPlaces(database))}
             >
-              Arrange
+              {t('connections.screen.arrange')}
             </button>
           )}
         </span>
@@ -222,7 +227,7 @@ export function Connections() {
         <p className="m-0 text-lede tabular-nums" aria-live="polite">
           {connectionsAnswer(t, data.declarations.length, data.edges.length)}
         </p>
-        <p className="m-0 text-caption text-ink-secondary" title={`Drag ${NEW_LINK_WORDS} from one format onto another, or press one and then the other. Nothing is written until you say so.`}>
+        <p className="m-0 text-caption text-ink-secondary" title={t('connections.screen.howHint', { words: t('connections.belongsTo') })}>
           {t('views.connections.how')}
         </p>
       </header>
@@ -252,19 +257,19 @@ export function Connections() {
         </div>
 
         <aside className="w-72 shrink-0 overflow-auto border-s border-hairline px-4 py-3">
-          <h2 className="mb-2 text-caption text-ink-secondary">Every connection, in words</h2>
+          <h2 className="mb-2 text-caption text-ink-secondary">{t('connections.screen.inWords')}</h2>
           {data.edges.length === 0 ? (
             // *An empty state is one sentence* in ink-secondary and one text action (M54 F3).
             <p className="text-caption text-ink-secondary">
-              No connection yet.{' '}
+              {t('connections.screen.noneYet')}{' '}
               {data.declarations[0] !== undefined && (
                 <button
                   type="button"
                   className="text-accent hover:underline hover:underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
-                  title={`Arms ${NEW_LINK_WORDS} on the first format; press another to connect them`}
+                  title={t('connections.screen.startOneHint', { words: t('connections.belongsTo') })}
                   onClick={() => setArmed({ kind: 'NEW_LINK', format: data.declarations[0]?.name ?? '' })}
                 >
-                  Start one
+                  {t('connections.screen.startOne')}
                 </button>
               )}
             </p>
@@ -417,9 +422,7 @@ function focusOf(proposal: Proposal): readonly string[] | undefined {
 }
 
 function keyOf(edge: Edge): string {
-  return edge.kind === 'LINK'
-    ? `link:${edge.format}.${edge.column}`
-    : `figure:${edge.format}.${edge.figure}`
+  return `${edge.kind}:${edge.format}.${edge.kind === 'LINK' ? edge.column : edge.figure}`
 }
 
 /** The panel remounts per gesture, so its fields start from the right defaults. */
@@ -454,6 +457,7 @@ function FindFormat({
   onQuery: (query: string) => void
   onFind: (name: string) => void
 }) {
+  const t = useT()
   const wanted = query.trim().toLowerCase()
   const matches =
     wanted === ''
@@ -471,8 +475,8 @@ function FindFormat({
         filter
         text={query}
         choices={declarations.map((each) => ({ value: each.name, label: each.title, search: each.name }))}
-        aria-label="Find a format"
-        placeholder="Find a format…"
+        aria-label={t('connections.screen.find')}
+        placeholder={t('connections.screen.findPlaceholder')}
         dir="auto"
         onText={onQuery}
         // Picked from the list: it is the whole title, so it goes at once.
@@ -488,7 +492,7 @@ function FindFormat({
         className={`${FIELD} h-7 w-44 text-caption`}
       />
       {wanted !== '' && matches.length === 0 && (
-        <span className="text-ink-secondary">No format is called that.</span>
+        <span className="text-ink-secondary">{t('connections.screen.findNone')}</span>
       )}
     </span>
   )

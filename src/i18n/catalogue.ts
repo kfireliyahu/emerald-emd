@@ -35,6 +35,10 @@ import { formats as enFormats } from './en/formats.ts'
 import { formats as heFormats } from './he/formats.ts'
 import { views as enViews } from './en/views.ts'
 import { views as heViews } from './he/views.ts'
+import { connections as enConnections } from './en/connections.ts'
+import { connections as heConnections } from './he/connections.ts'
+import { dashboards as enDashboards } from './en/dashboards.ts'
+import { dashboards as heDashboards } from './he/dashboards.ts'
 import type { Language } from './language.ts'
 
 /**
@@ -81,6 +85,9 @@ export const ENGLISH = {
 
   // M64 U14 (D-626): the engine's views, the agenda, the dashboards and the connections.
   views: enViews,
+  // M64 F18, F20 (D-632): the connections screen and the dashboards, every word.
+  connections: enConnections,
+  dashboards: enDashboards,
 } as const
 
 export type English = typeof ENGLISH
@@ -116,6 +123,8 @@ export const HEBREW: { readonly [A in Area]?: Translation<A> } = {
 
   formats: heFormats,
   views: heViews,
+  connections: heConnections,
+  dashboards: heDashboards,
 }
 
 const CATALOGUES: Readonly<Record<Language, unknown>> = { en: ENGLISH, he: HEBREW }

@@ -8,8 +8,10 @@ import { boardSettings, savedViews } from '@/data/repositories/formatViewReposit
 import { labelColumn, type FormatDeclaration } from '@/domain/format/declaration.ts'
 import type { InputShape } from '@/domain/format/inputView.ts'
 import { boardOf, type DashboardBlock } from '@/domain/format/view.ts'
+import { useT, type Translate } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 import { canonicalAddress, filterAddress, type AddressOrder, type ColumnChoice } from './addressFilter.ts'
 import { ColumnFilter } from './FilterBand.tsx'
@@ -107,6 +109,15 @@ export type Placing = (work: (db: Database) => void, block: DashboardBlock) => s
 
 const RADIO = 'flex h-6 items-center gap-2 text-body'
 
+/** The kinds a saved view can be, each with its word in `dashboards.kinds`. */
+const KIND_WORDS = ['list', 'table', 'board', 'roadmap', 'page', 'ready', 'start', 'agenda', 'entry', 'input'] as const
+
+/** A saved view's kind in the reader's words; a kind this build does not know stays as stored. */
+export function kindWord(t: Translate, kind: string): string {
+  const known = KIND_WORDS.find((each) => each === kind)
+  return known === undefined ? kind : t(`dashboards.kinds.${known}`)
+}
+
 function Field({ label, children }: { readonly label: string; readonly children: ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
@@ -133,8 +144,9 @@ function FormatChoice({
   readonly group: string
   readonly onChoose: (format: FormatDeclaration) => void
 }) {
+  const t = useT()
   return (
-    <Field label="Of">
+    <Field label={t('dashboards.make.of')}>
       <div className="flex flex-wrap items-center gap-x-3">
         {formats.map((each) => (
           <label key={each.name} className={RADIO}>
@@ -149,7 +161,9 @@ function FormatChoice({
 
 /** What the filter holds, in its own words, and the way to let it go. */
 function Held({ filter, order, onClear }: { readonly filter: RowFilter; readonly order?: AddressOrder | undefined; readonly onClear: () => void }) {
-  const words = [filterText(filter), ...(order === undefined ? [] : [`sorted by ${order.column} ${order.descending ? '↓' : '↑'}`])]
+  const t = useT()
+  const sorted = order === undefined ? [] : [t('dashboards.make.sortedBy', { column: order.column, arrow: order.descending ? '↓' : '↑' })]
+  const words = [filterText(filter), ...sorted]
     .filter((each) => each !== '')
     .join(', ')
   if (words === '') return null
@@ -161,7 +175,7 @@ function Held({ filter, order, onClear }: { readonly filter: RowFilter; readonly
         className="underline decoration-hairline underline-offset-2 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
         onClick={onClear}
       >
-        Clear
+        {t('dashboards.make.clear')}
       </button>
     </span>
   )
@@ -178,12 +192,13 @@ function NameField({
   readonly onChange: (name: string) => void
   readonly onSubmit: () => void
 }) {
+  const t = useT()
   return (
     <input
       type="text"
       value={value}
       placeholder={placeholder}
-      aria-label="Name"
+      aria-label={t('dashboards.make.name')}
       onChange={(event) => onChange(event.target.value)}
       onKeyDown={(event) => {
         if (event.key === 'Enter') onSubmit()
@@ -194,6 +209,7 @@ function NameField({
 }
 
 function Actions({ add, refused, onAdd, onCancel }: { readonly add: string; readonly refused: string | undefined; readonly onAdd: () => void; readonly onCancel: () => void }) {
+  const t = useT()
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center gap-2">
@@ -201,7 +217,7 @@ function Actions({ add, refused, onAdd, onCancel }: { readonly add: string; read
           {add}
         </Button>
         <Button variant="ghost" size="sm" onClick={onCancel}>
-          Cancel
+          {t('dashboards.make.cancel')}
         </Button>
       </div>
       {refused !== undefined && (
@@ -258,6 +274,7 @@ export function ViewForm({
   /** False from a format's + (M55 U3): saved, and placed on no dashboard. */
   readonly place?: boolean
 }) {
+  const t = useT()
   const declaration = formats.find((each) => each.name === making.format) ?? formats[0]
   if (declaration === undefined) return null
   const set = (next: Partial<ViewMaking>): void => {
@@ -281,18 +298,18 @@ export function ViewForm({
   }
   return (
     <>
-      <Heading>New view</Heading>
+      <Heading>{t('dashboards.menu.newView')}</Heading>
       <div className="flex w-[360px] flex-col gap-2.5 px-3 pt-1 pb-3">
         {document && formats.length > 1 && (
           <FormatChoice formats={formats} chosen={declaration} group="view-format" onChoose={(each) => onMaking({ ...newView(each), name: making.name })} />
         )}
-        <Field label="As">
+        <Field label={t('dashboards.make.as')}>
           <div className="flex flex-wrap items-center gap-x-3">
             {MADE_KINDS.map((kind) => (
               <label
                 key={kind}
                 className={`${RADIO} ${kind === 'board' && !boardable ? 'opacity-45' : ''}`}
-                title={kind === 'board' && !boardable ? `${declaration.title} has no choice column to make the board’s lanes of.` : undefined}
+                title={kind === 'board' && !boardable ? t('dashboards.make.noLanes', { format: declaration.title }) : undefined}
               >
                 <input
                   type="radio"
@@ -302,12 +319,12 @@ export function ViewForm({
                   disabled={kind === 'board' && !boardable}
                   onChange={() => set({ kind, columns: {} })}
                 />
-                {kind.charAt(0).toUpperCase() + kind.slice(1)}
+                {t(`dashboards.madeKinds.${kind}`)}
               </label>
             ))}
           </div>
         </Field>
-        <Field label="Which rows, in what order">
+        <Field label={t('dashboards.make.which')}>
           <span className="flex flex-wrap items-center gap-2">
             <ColumnFilter
               db={db}
@@ -324,17 +341,19 @@ export function ViewForm({
           </span>
           <Held filter={making.filter} order={making.order} onClear={() => set({ filter: {}, order: undefined })} />
         </Field>
-        <Field label="Name">
-          <NameField value={making.name} placeholder="What it shows, e.g. Due today" onChange={(name) => set({ name })} onSubmit={submit} />
+        <Field label={t('dashboards.make.name')}>
+          <NameField value={making.name} placeholder={t('dashboards.make.viewPlaceholder')} onChange={(name) => set({ name })} onSubmit={submit} />
         </Field>
         <div className="bg-surface px-2.5 py-2 text-caption text-ink-secondary">
-          {read.ok
-            ? `${String(held ?? 0)} of ${String(countRows(db, declaration))} rows, as a ${making.kind}`
-            : read.error.kind === 'NO_COLUMN'
-              ? `${declaration.title} has no column ${read.error.name}.`
-              : read.error.reason}
+          {read.ok ? (
+            t('dashboards.make.preview', { held: String(held ?? 0), all: String(countRows(db, declaration)), kind: kindWord(t, making.kind) })
+          ) : read.error.kind === 'NO_COLUMN' ? (
+            <Phrase text={t('dashboards.make.noColumn')} parts={{ format: <Bidi>{declaration.title}</Bidi>, name: <Bidi>{read.error.name}</Bidi> }} />
+          ) : (
+            read.error.reason
+          )}
         </div>
-        <Actions add="Add" refused={making.refused} onAdd={submit} onCancel={() => onMaking(undefined)} />
+        <Actions add={t('dashboards.make.add')} refused={making.refused} onAdd={submit} onCancel={() => onMaking(undefined)} />
       </div>
     </>
   )
@@ -369,6 +388,7 @@ export function ChartForm({
   /** False from a format's + (M55 U3): declared, and placed on no dashboard. */
   readonly place?: boolean
 }) {
+  const t = useT()
   const declaration = formats.find((each) => each.name === making.format) ?? formats[0]
   if (declaration === undefined) return null
   const set = (next: Partial<ChartMaking>): void => {
@@ -400,26 +420,28 @@ export function ChartForm({
   const refused = periodUnsaid || making.refused === previewSays ? undefined : making.refused
   return (
     <>
-      <Heading>New chart</Heading>
+      <Heading>{t('dashboards.menu.newChart')}</Heading>
       <div className="flex w-[360px] flex-col gap-2.5 px-3 pt-1 pb-3">
         {document && formats.length > 1 && (
           <FormatChoice formats={formats} chosen={declaration} group="chart-format" onChoose={(each) => onMaking({ ...newChart(each), name: making.name })} />
         )}
-        <Field label="Figure">
+        <Field label={t('dashboards.make.figure')}>
           <label className={RADIO}>
             <input type="radio" name="chart-figure" className="accent-ink" checked={making.sum === undefined} onChange={() => set({ sum: undefined })} />
-            Count of rows
+            {t('dashboards.make.countRows')}
           </label>
           {sums.map((column) => (
             <label key={column.name} className={RADIO}>
               <input type="radio" name="chart-figure" className="accent-ink" checked={making.sum === column.name} onChange={() => set({ sum: column.name })} />
-              Sum of {column.name.replace(/_/g, ' ')}
+              <Phrase text={t('dashboards.make.sumOf')} parts={{ column: <Bidi>{column.name.replace(/_/g, ' ')}</Bidi> }} />
             </label>
           ))}
         </Field>
-        <Field label="By month of">
+        <Field label={t('dashboards.make.byMonth')}>
           {periods.length === 0 ? (
-            <span className="text-caption text-ink-secondary">{declaration.title} has no date or month column to chart by.</span>
+            <span className="text-caption text-ink-secondary">
+              <Phrase text={t('dashboards.make.noPeriod')} parts={{ format: <Bidi>{declaration.title}</Bidi> }} />
+            </span>
           ) : (
             periods.map((column) => (
               <label key={column.name} className={RADIO}>
@@ -443,10 +465,10 @@ export function ChartForm({
           )}
         </Field>
         {links.length > 0 && (
-          <Field label="And per">
+          <Field label={t('dashboards.make.per')}>
             <label className={RADIO}>
               <input type="radio" name="chart-by" className="accent-ink" checked={making.by === undefined} onChange={() => set({ by: undefined })} />
-              Nothing else
+              {t('dashboards.make.nothingElse')}
             </label>
             {links.map((column) => (
               <label key={column.name} className={RADIO}>
@@ -457,7 +479,7 @@ export function ChartForm({
           </Field>
         )}
         {chartFilterColumns(declaration).length > 0 && (
-          <Field label="Only rows where">
+          <Field label={t('dashboards.make.onlyWhere')}>
             <span className="flex flex-wrap items-center gap-2">
               <ColumnFilter
                 db={db}
@@ -471,8 +493,8 @@ export function ChartForm({
             <Held filter={making.filter} onClear={() => set({ filter: {} })} />
           </Field>
         )}
-        <Field label="Name">
-          <NameField value={making.name} placeholder="What it counts, e.g. Done by month" onChange={(each) => set({ name: each })} onSubmit={submit} />
+        <Field label={t('dashboards.make.name')}>
+          <NameField value={making.name} placeholder={t('dashboards.make.chartPlaceholder')} onChange={(each) => set({ name: each })} onSubmit={submit} />
         </Field>
         <div className="bg-surface px-2.5 py-2 text-caption text-ink-secondary">
           {plan !== undefined && plan.ok ? (
@@ -480,10 +502,10 @@ export function ChartForm({
           ) : previewSays !== undefined ? (
             <span className="text-negative">{previewSays}</span>
           ) : (
-            'Its name is the rollup’s, declared on the format.'
+            t('dashboards.make.chartName')
           )}
         </div>
-        <Actions add="Add" refused={refused} onAdd={submit} onCancel={() => onMaking(undefined)} />
+        <Actions add={t('dashboards.make.add')} refused={refused} onAdd={submit} onCancel={() => onMaking(undefined)} />
       </div>
     </>
   )
@@ -516,6 +538,7 @@ export function InputViewForm({
   readonly onMaking: (next: InputMaking | undefined) => void
   readonly onPlace: Placing
 }) {
+  const t = useT()
   const declaration = formats.find((each) => each.name === making.format) ?? formats[0]
   if (declaration === undefined) return null
   const set = (next: Partial<InputMaking>): void => {
@@ -529,13 +552,13 @@ export function InputViewForm({
   }
   return (
     <>
-      <Heading>New input view</Heading>
+      <Heading>{t('dashboards.menu.newInput')}</Heading>
       <div className="flex w-[400px] max-w-[calc(100vw-48px)] flex-col gap-2.5 px-3 pt-1 pb-3">
         {document && formats.length > 1 && (
           <FormatChoice formats={formats} chosen={declaration} group="input-format" onChoose={(each) => onMaking(newInput(db, each))} />
         )}
-        <Field label="Name">
-          <NameField value={making.name} placeholder="What it adds, e.g. Card charge" onChange={(name) => set({ name })} onSubmit={submit} />
+        <Field label={t('dashboards.make.name')}>
+          <NameField value={making.name} placeholder={t('dashboards.make.inputPlaceholder')} onChange={(name) => set({ name })} onSubmit={submit} />
         </Field>
         <div className="-mx-3">
           <InputFields
@@ -547,9 +570,9 @@ export function InputViewForm({
         </div>
         <label className="flex items-center gap-1.5 text-caption text-ink-secondary">
           <input type="checkbox" className="accent-[var(--color-ink)]" checked={making.isDefault} onChange={(event) => set({ isDefault: event.target.checked })} />
-          Use for Add
+          {t('dashboards.make.useForAdd')}
         </label>
-        <Actions add="Add" refused={making.refused} onAdd={submit} onCancel={() => onMaking(undefined)} />
+        <Actions add={t('dashboards.make.add')} refused={making.refused} onAdd={submit} onCancel={() => onMaking(undefined)} />
       </div>
     </>
   )

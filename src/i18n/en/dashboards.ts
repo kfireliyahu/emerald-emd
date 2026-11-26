@@ -1,0 +1,123 @@
+/**
+ * **The dashboards, in English** (M64 F18/F20, D-632): every word of a
+ * dashboard — its blocks, what makes one, a rollup — beyond the answer, which
+ * stays in `views.dashboard`. The source `../he/dashboards.ts` translates.
+ */
+export const dashboards = {
+  /** The grid's one action, on an empty dashboard and at its end. */
+  addBlock: 'Add a block',
+  /** A block's own controls and its ⋯ menu. */
+  block: {
+    open: 'Open {title} in full',
+    openInFull: 'Open in full',
+    dragMove: 'Drag to move',
+    more: 'More',
+    moreOf: '{title}: more',
+    moveEarlier: 'Move earlier',
+    moveLater: 'Move later',
+    remove: 'Remove from this dashboard',
+    totalGoes: 'A headline total lives only on this dashboard, so it goes with the block.',
+    savedStays: 'The saved view itself stays.',
+    chartStays: 'The chart itself stays — delete it under {format} in the rail, or on its tab.',
+  },
+  /** A block's edges: its width in columns, its height in rows. */
+  size: {
+    width: 'Width. Drag, or press the left and right arrows.',
+    height: 'Height. Drag, or press the up and down arrows.',
+    both: 'Size. Drag, or press the arrows.',
+    resize: 'Drag to resize',
+    columns: { one: '{count} column', other: '{count} columns' },
+    rows: { one: '{count} row', other: '{count} rows' },
+    tall: 'as tall as it holds',
+  },
+  /** What a block draws, and what it says when it cannot. */
+  body: {
+    noChart: '{format} has no chart called {name} any more.',
+    empty: 'No row falls in it yet.',
+    noView: '{format} has no saved view called {name} any more.',
+    noColumn: '{format} has no column {name} any more.',
+    more: '{count} more',
+    nothing: 'Nothing matches: {words}.',
+    done: 'Done',
+    notDone: 'Not done',
+    doneCount: '{count} done',
+  },
+  /** *Add a block*: what is already there to place, and what can be made. */
+  menu: {
+    savedViews: 'Saved views',
+    rollups: 'Rollups',
+    none: 'No saved views or rollups yet.',
+    chart: 'chart',
+    newInput: 'New input view',
+    newInputAside: 'a form that stays open',
+    newView: 'New view',
+    newViewAside: 'a list, table or board',
+    newChart: 'New chart',
+    newChartAside: 'a count or a sum by month',
+    total: 'Headline total',
+    totalAside: 'a count or a sum',
+  },
+  /** A saved view's kind, in a sentence. */
+  kinds: {
+    list: 'list',
+    table: 'table',
+    board: 'board',
+    roadmap: 'roadmap',
+    page: 'page',
+    ready: 'ready',
+    start: 'start',
+    agenda: 'agenda',
+    entry: 'entry',
+    input: 'input view',
+  },
+  /** A view's kind, as its choice in *New view*. */
+  madeKinds: { list: 'List', table: 'Table', board: 'Board' },
+  /** The forms that make a block: a headline total, a view, a chart, an input view. */
+  make: {
+    of: 'Of',
+    as: 'As',
+    figure: 'Figure',
+    countRows: 'Count of rows',
+    sumOf: 'Sum of {column}',
+    where: 'Where',
+    name: 'Name',
+    totalPlaceholder: 'What the figure is, e.g. Open',
+    every: 'every {format}',
+    taken: 'A block here is called {name} already.',
+    add: 'Add',
+    cancel: 'Cancel',
+    clear: 'Clear',
+    sortedBy: 'sorted by {column} {arrow}',
+    noLanes: '{format} has no choice column to make the board’s lanes of.',
+    which: 'Which rows, in what order',
+    viewPlaceholder: 'What it shows, e.g. Due today',
+    preview: '{held} of {all} rows, as a {kind}',
+    noColumn: '{format} has no column {name}.',
+    byMonth: 'By month of',
+    noPeriod: '{format} has no date or month column to chart by.',
+    per: 'And per',
+    nothingElse: 'Nothing else',
+    onlyWhere: 'Only rows where',
+    chartPlaceholder: 'What it counts, e.g. Done by month',
+    chartName: 'Its name is the rollup’s, declared on the format.',
+    inputPlaceholder: 'What it adds, e.g. Card charge',
+    useForAdd: 'Use for Add',
+  },
+  /** A rollup on its format's tab: its chart, its table, and deleting it. */
+  rollup: {
+    asChart: '{name} as a chart',
+    drawAs: 'Draw as',
+    bars: 'Bars',
+    line: 'Line',
+    month: 'month',
+    rows: 'rows',
+    noMonth: 'no month',
+    none: 'none',
+    unchecked: 'unchecked',
+    delete: 'Delete chart',
+    deleteOf: 'Delete {name}',
+    question: 'Delete {name} and its charts on dashboards?',
+    confirm: 'Delete',
+    keep: 'Keep',
+  },
+} as const

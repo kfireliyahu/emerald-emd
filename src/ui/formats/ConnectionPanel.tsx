@@ -1,6 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
-import { capitalize, listed } from '@/core/text.ts'
+import { capitalize } from '@/core/text.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useDates, useT, type Translate } from '@/i18n/current.ts'
+import type { DateWords } from '@/i18n/dates.ts'
 import { isOrdered, type AggregateKind, type AggregateSource } from '@/domain/format/aggregate.ts'
 import {
   edgeHeadline,
@@ -9,7 +12,6 @@ import {
   foldsOver,
   freeColumnName,
   headlineOf,
-  kindWord,
   NEW_LINK_WORDS,
   nounOf,
   pluralOf,
@@ -27,12 +29,13 @@ import {
   retype,
   type FormatDraft,
 } from '@/domain/format/draft.ts'
-import { formatYearMonth, parseYearMonth } from '@/core/time.ts'
+import { parseYearMonth } from '@/core/time.ts'
 import { matchedOn, type FindPlan, type FoundBy, type FoundGrain, type Unplaced } from '@/domain/format/foundBy.ts'
 import type { Refusal, ReconcilePlan } from '@/domain/format/reconcile.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { IconAction } from '@/ui/components/IconAction.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { BLANK, FIELD, FIELD_MULTILINE } from '@/ui/components/fieldLook.ts'
 import { FormulaField } from '@/ui/formats/FormulaField.tsx'
 
@@ -115,6 +118,8 @@ export function ConnectionPanel({
   /** Opened right after the link was first set to match by date: ask about the rows there first. */
   offerApply?: boolean | undefined
 }) {
+  const t = useT()
+  const calendar = useDates()
   const index = new Map(declarations.map((each) => [each.name, each]))
   const title = titleIn(declarations)
   const [initial] = useState<Fields>(() => opening(asked, existing, declarations))
@@ -151,7 +156,7 @@ export function ConnectionPanel({
         {asked.detail !== undefined && <p className="m-0 text-caption text-ink-secondary">{asked.detail}</p>}
         <Actions>
           <Button variant="secondary" onClick={onCancel}>
-            OK
+            {t('connections.panel.ok')}
           </Button>
         </Actions>
       </Frame>
@@ -168,9 +173,9 @@ export function ConnectionPanel({
     : asked
   const Many = title(pair.many)
   const One = title(pair.one)
-  const many = nounOf(Many)
-  const one = nounOf(One)
-  const manyRows = pluralOf(Many)
+  /** The two formats, as the catalogue's sentences name them: as text, and each in its `Bidi`. */
+  const words = sideWords(Many, One)
+  const sides = sideParts(Many, One)
 
   const drafts = buildDrafts(proposal, existing, fieldsWritten(fields, proposal, declarations), declarations, deleting)
   const { problems, plans } = judge(drafts)
@@ -205,10 +210,15 @@ export function ConnectionPanel({
       return (
         <Frame key="blocked">
           <p className={HEADLINE}>
-            Delete {listed(names)} first. {title(first?.format ?? pair.one)} adds {names.length === 1 ? 'it' : 'them'} up
-            through this connection.
+            <Phrase
+              text={t(countKey('connections.panel.blocked', names.length))}
+              parts={{
+                names: <Bidi>{andList(t, names)}</Bidi>,
+                title: <Bidi>{title(first?.format ?? pair.one)}</Bidi>,
+              }}
+            />
           </p>
-          <p className="m-0 text-caption text-ink-secondary">Nothing is deleted for you.</p>
+          <p className="m-0 text-caption text-ink-secondary">{t('connections.panel.nothingDeleted')}</p>
           <Actions>
             {first !== undefined && (
               <Button
@@ -220,11 +230,11 @@ export function ConnectionPanel({
                   )
                 }
               >
-                Open {first.aggregate.name}
+                <Phrase text={t('connections.panel.open')} parts={{ name: <Bidi>{first.aggregate.name}</Bidi> }} />
               </Button>
             )}
             <Button variant="ghost" onClick={() => setDeleting(false)}>
-              Cancel
+              {t('connections.panel.cancel')}
             </Button>
           </Actions>
         </Frame>
@@ -236,16 +246,16 @@ export function ConnectionPanel({
       return (
         <Frame key="refused">
           <p className={HEADLINE}>
-            {existing.column} can’t be deleted while {count === undefined ? manyRows : counted(count, Many)}{' '}
-            {count === 1 ? 'has' : 'have'} something in it.
+            <Phrase
+              text={t(countKey('connections.panel.cantDelete', count ?? 0))}
+              parts={{ column: <Bidi>{existing.column}</Bidi>, who: <Bidi>{whoText(t, count, Many)}</Bidi> }}
+            />
           </p>
-          <p className="m-0 text-caption text-ink-secondary">
-            Empty it first if you mean to lose what’s in it. Nothing is deleted for you.
-          </p>
+          <p className="m-0 text-caption text-ink-secondary">{t('connections.panel.emptyFirst')}</p>
           <ExactlyWhy refusals={refused} />
           <Actions>
             <Button variant="ghost" onClick={() => setDeleting(false)}>
-              Keep it
+              {t('connections.panel.keepIt')}
             </Button>
           </Actions>
         </Frame>
@@ -254,18 +264,30 @@ export function ConnectionPanel({
     return (
       <Frame key="delete">
         <p className={HEADLINE}>
-          {existing.kind === 'LINK'
-            ? 'Delete this connection?'
-            : `Stop adding up ${existing.figure} on ${title(existing.format)}?`}
+          {existing.kind === 'LINK' ? (
+            t('connections.panel.deleteLink')
+          ) : (
+            <Phrase
+              text={t('connections.panel.stopFigure')}
+              parts={{ figure: <Bidi>{existing.figure}</Bidi>, title: <Bidi>{title(existing.format)}</Bidi> }}
+            />
+          )}
         </p>
         <p className="m-0 text-caption text-ink-secondary">
           {existing.kind === 'LINK' ? (
-            <>
-              <Bidi>{Many}</Bidi> loses its <b className="font-medium text-ink">{existing.column}</b> column and what’s
-              in it. <Bidi>{One}</Bidi> doesn’t change.
-            </>
+            <Phrase
+              text={t('connections.panel.loses')}
+              parts={{
+                ...sides,
+                column: (
+                  <b className="font-medium text-ink">
+                    <Bidi>{existing.column}</Bidi>
+                  </b>
+                ),
+              }}
+            />
           ) : (
-            'Nothing stored is lost.'
+            t('connections.panel.nothingLost')
           )}
         </p>
         {problems.map((problem) => (
@@ -281,10 +303,10 @@ export function ConnectionPanel({
             disabled={problems.length > 0 || refused.length > 0}
             onClick={() => onSave(drafts)}
           >
-            Delete
+            {t('connections.panel.delete')}
           </Button>
           <Button variant="ghost" onClick={() => setDeleting(false)}>
-            Keep it
+            {t('connections.panel.keepIt')}
           </Button>
         </Actions>
       </Frame>
@@ -301,28 +323,45 @@ export function ConnectionPanel({
       <Frame key="apply">
         <Relation many={Many} one={One} />
         <p className={HEADLINE}>
-          {placing === 0
-            ? `None of the ${savedFind.empty === 1 ? `${many} without a ${one} can get one` : `${counted(savedFind.empty, Many)} without a ${one} can get one`}.`
-            : `${capitalize(counted(placing, Many))}${offerApply ? ' already here' : ''} ${placing === 1 ? 'gets' : 'get'} a ${one}.`}
+          {placing === 0 ? (
+            <Phrase
+              text={t(countKey('connections.panel.noneCan', savedFind.empty), { count: savedFind.empty })}
+              parts={sides}
+            />
+          ) : (
+            <Phrase
+              text={t(countKey(offerApply ? 'connections.panel.getsHere' : 'connections.panel.gets', placing), {
+                count: placing,
+              })}
+              parts={sides}
+            />
+          )}
         </p>
         <p className="m-0 text-caption text-ink-secondary">
-          Each gets the {one} of its {savedFind.foundBy.grain === 'DAY' ? 'day' : 'month'}. A {many} that already has a{' '}
-          {one} isn’t touched, whoever set it.
+          <Phrase
+            text={t(savedFind.foundBy.grain === 'DAY' ? 'connections.panel.eachGetsDay' : 'connections.panel.eachGetsMonth')}
+            parts={sides}
+          />
         </p>
         {left.length > 0 && (
           <div className="mt-3 max-w-[62ch]">
             <p className="m-0 text-caption text-ink-secondary">
-              {capitalize(counted(left.length, Many))} {left.length === 1 ? 'stays' : 'stay'} empty:
+              <Phrase
+                text={t(countKey('connections.panel.staysEmpty', left.length), { count: left.length })}
+                parts={sides}
+              />
             </p>
             <ul className="m-0 mt-1 list-disc ps-5 text-caption">
               {left.slice(0, UNPLACED_SHOWN).map((each) => (
                 <li key={each.id}>
-                  <Bidi>{each.name ?? (each.kind === 'NO_DATE' ? `A ${many}` : each.date)}</Bidi>
-                  <span className="text-ink-secondary"> — {unplacedReason(each, savedFind, One)}</span>
+                  <Bidi>{each.name ?? (each.kind === 'NO_DATE' ? t('connections.panel.aRow', words) : each.date)}</Bidi>
+                  <span className="text-ink-secondary"> — {unplacedReason(t, calendar, each, savedFind, One)}</span>
                 </li>
               ))}
               {left.length > UNPLACED_SHOWN && (
-                <li className="text-ink-secondary">and {String(left.length - UNPLACED_SHOWN)} more</li>
+                <li className="text-ink-secondary">
+                  {t('connections.panel.andMore', { count: left.length - UNPLACED_SHOWN })}
+                </li>
               )}
             </ul>
           </div>
@@ -337,11 +376,11 @@ export function ConnectionPanel({
                 back()
               }}
             >
-              Apply
+              {t('connections.panel.apply')}
             </Button>
           )}
           <Button variant={placing > 0 ? 'ghost' : 'secondary'} onClick={offerApply ? onCancel : back}>
-            {placing > 0 ? 'Not now' : 'OK'}
+            {t(placing > 0 ? 'connections.panel.notNow' : 'connections.panel.ok')}
           </Button>
         </Actions>
       </Frame>
@@ -361,21 +400,23 @@ export function ConnectionPanel({
       : undefined
   if (retyped !== undefined && proposal.kind === 'LINK' && proposal.column !== undefined) {
     const count = rowsIn(retyped)
-    const who = count === undefined ? manyRows : counted(count, Many)
-    const have = count === 1 ? 'has' : 'have'
     const was = index.get(pair.many)?.columns.find((each) => each.name === proposal.column)?.target
     return (
       <Frame key="retype">
         <Relation many={Many} one={One} />
         <p className={HEADLINE}>
-          {proposal.retyping
-            ? `${proposal.column} can’t become the connection: ${who} already ${have} ${proposal.column} in it.`
-            : `${proposal.column} can’t point at ${One} instead: ${who} already ${have} a ${nounOf(title(was ?? ''))} in it.`}
+          <Phrase
+            text={t(countKey(proposal.retyping ? 'connections.panel.cantBecome' : 'connections.panel.cantPoint', count ?? 0))}
+            parts={{
+              ...sides,
+              column: <Bidi>{proposal.column}</Bidi>,
+              who: <Bidi>{whoText(t, count, Many)}</Bidi>,
+              was: <Bidi>{nounOf(title(was ?? ''))}</Bidi>,
+            }}
+          />
         </p>
         <p className="m-0 text-caption text-ink-secondary">
-          {proposal.retyping
-            ? `Turning it into a link to a ${one} would leave those figures meaning nothing. Use a new column instead.`
-            : 'They would end up naming the wrong thing. Use a new column instead.'}
+          {proposal.retyping ? <Phrase text={t('connections.panel.turning')} parts={sides} /> : t('connections.panel.wrongThing')}
         </p>
         <ExactlyWhy refusals={refused} />
         <Actions>
@@ -385,10 +426,10 @@ export function ConnectionPanel({
               onPropose?.({ kind: 'LINK', from: pair.many, to: pair.one, column: undefined, retyping: false })
             }
           >
-            Use a new column
+            {t('connections.panel.useNew')}
           </Button>
           <Button variant="ghost" onClick={onCancel}>
-            Cancel
+            {t('connections.panel.cancel')}
           </Button>
         </Actions>
       </Frame>
@@ -466,7 +507,7 @@ export function ConnectionPanel({
       (fields.figure.trim() === '' ||
         (fields.kind !== 'COUNT' && fields.expression.trim() === '') ||
         (isOrdered(fields.kind) && fields.by === '')))
-  const will = willSay(proposal, existing, fields, Many, One, pair, declarations)
+  const will = willSay(t, proposal, existing, fields, Many, One, pair, declarations)
 
   return (
     <Frame key="main">
@@ -478,7 +519,9 @@ export function ConnectionPanel({
       <div className={ROWS}>
         {offersEvery && (
           <>
-            <div className={Q}>Which {manyRows}</div>
+            <div className={Q}>
+              <Phrase text={t('connections.panel.whichRows')} parts={sides} />
+            </div>
             <div className={A}>
               <div className="inline-flex flex-wrap self-start" data-which-rows>
                 <ChoiceButton
@@ -488,7 +531,7 @@ export function ConnectionPanel({
                     setTouched(true)
                   }}
                 >
-                  The ones that belong to it
+                  {t('connections.panel.belongingOnes')}
                 </ChoiceButton>
                 <ChoiceButton
                   on={every}
@@ -497,13 +540,12 @@ export function ConnectionPanel({
                     setTouched(true)
                   }}
                 >
-                  Every {many}
+                  <Phrase text={t('connections.panel.everyOne')} parts={sides} />
                 </ChoiceButton>
               </div>
               {every && (
                 <span className={CAPTION}>
-                  <Bidi>{Many}</Bidi> gets no new column. One {one} — or each, if there are several — shows the same
-                  figure, from every {many} there is.
+                  <Phrase text={t('connections.panel.everyCaption')} parts={sides} />
                 </span>
               )}
             </div>
@@ -512,23 +554,25 @@ export function ConnectionPanel({
 
         {linking && (
           <>
-            <div className={Q}>Which {one}</div>
+            <div className={Q}>
+              <Phrase text={t('connections.panel.whichOne')} parts={sides} />
+            </div>
             <div className={A}>
               <div className="inline-flex flex-wrap self-start">
                 <ChoiceButton
                   on={!byDate}
                   onClick={() => setFields({ ...fields, foundFrom: '', foundIn: '' })}
                 >
-                  I pick it
+                  {t('connections.panel.pickIt')}
                 </ChoiceButton>
                 <ChoiceButton
                   on={byDate}
                   disabled={dates.length === 0 || periods.length === 0}
                   title={
                     dates.length === 0
-                      ? `${Many} has no date to match by.`
+                      ? t('connections.panel.noDate', words)
                       : periods.length === 0
-                        ? `${One} has no date or month to match against.`
+                        ? t('connections.panel.noPeriod', words)
                         : undefined
                   }
                   onClick={() =>
@@ -539,65 +583,73 @@ export function ConnectionPanel({
                     })
                   }
                 >
-                  Match by date
+                  {t('connections.panel.matchByDate')}
                 </ChoiceButton>
               </div>
               {byDate && (
                 <div className="fc-pop-enter">
                   <p className={SAY}>
-                    The {many}’s{' '}
-                    <Pick
-                      label={`${Many}’s date`}
-                      value={fields.foundFrom}
-                      options={dates.map((each) => ({ value: each.name, label: each.name }))}
-                      onPick={(foundFrom) => setFields({ ...fields, foundFrom })}
-                    />{' '}
-                    {periodType === 'month' ? (
-                      <>falls in the {one}’s </>
-                    ) : (
-                      <>
-                        is in the same{' '}
-                        <Pick
-                          label="Same month or same day"
-                          value={fields.foundGrain}
-                          options={[
-                            { value: 'MONTH', label: 'month' },
-                            { value: 'DAY', label: 'day' },
-                          ]}
-                          onPick={(grain) => setFields({ ...fields, foundGrain: grain as FoundGrain })}
-                        />{' '}
-                        as the {one}’s{' '}
-                      </>
-                    )}
-                    <Pick
-                      label={`${One}’s date or month`}
-                      value={fields.foundIn}
-                      options={periods.map((each) => ({ value: each.name, label: each.name }))}
-                      onPick={(foundIn) => setFields({ ...fields, foundIn })}
+                    <Phrase
+                      text={t(periodType === 'month' ? 'connections.panel.fallsIn' : 'connections.panel.sameAs')}
+                      parts={{
+                        ...sides,
+                        from: (
+                          <Pick
+                            label={t('connections.panel.dateLabel', words)}
+                            value={fields.foundFrom}
+                            options={dates.map((each) => ({ value: each.name, label: each.name }))}
+                            onPick={(foundFrom) => setFields({ ...fields, foundFrom })}
+                          />
+                        ),
+                        grain: (
+                          <Pick
+                            label={t('connections.panel.grainLabel')}
+                            value={fields.foundGrain}
+                            options={[
+                              { value: 'MONTH', label: t('connections.panel.month') },
+                              { value: 'DAY', label: t('connections.panel.day') },
+                            ]}
+                            onPick={(grain) => setFields({ ...fields, foundGrain: grain as FoundGrain })}
+                          />
+                        ),
+                        in: (
+                          <Pick
+                            label={t('connections.panel.periodLabel', words)}
+                            value={fields.foundIn}
+                            options={periods.map((each) => ({ value: each.name, label: each.name }))}
+                            onPick={(foundIn) => setFields({ ...fields, foundIn })}
+                          />
+                        ),
+                      }}
                     />
-                    .
                   </p>
                   <span className={CAPTION}>
-                    Fills an empty one when a {many} is saved. No match, or two, and the {many} isn’t saved; it tells
-                    you which. One you picked yourself is never moved.
+                    <Phrase text={t('connections.panel.fills')} parts={sides} />
                   </span>
                   {(applied !== undefined || (savedFind !== undefined && savedFind.empty > 0)) && (
                     <p className="m-0 mt-1.5 text-caption" data-found-apply>
                       {applied !== undefined && (
                         <span className="text-ink-secondary">
-                          {capitalize(counted(applied.placements.length, Many))} got a {one}.{' '}
+                          <Phrase
+                            text={t(countKey('connections.panel.got', applied.placements.length), {
+                              count: applied.placements.length,
+                            })}
+                            parts={sides}
+                          />{' '}
                         </span>
                       )}
                       {savedFind !== undefined && savedFind.empty > 0 && (
                         <>
-                          {capitalize(counted(savedFind.empty, Many))} {savedFind.empty === 1 ? 'has' : 'have'} no {one}{' '}
-                          yet —{' '}
+                          <Phrase
+                            text={t(countKey('connections.panel.haveNone', savedFind.empty), { count: savedFind.empty })}
+                            parts={sides}
+                          />{' '}
                           <button
                             type="button"
                             onClick={() => setConfirming(true)}
                             className="cursor-pointer border-0 bg-transparent p-0 text-caption text-accent hover:underline"
                           >
-                            Apply
+                            {t('connections.panel.apply')}
                           </button>
                         </>
                       )}
@@ -612,7 +664,7 @@ export function ConnectionPanel({
                   onChange={(event) => setFields({ ...fields, required: event.target.checked })}
                   className="m-0 size-4 accent-[var(--color-accent)]"
                 />
-                Every {many} must have one
+                <Phrase text={t('connections.panel.mustHave')} parts={sides} />
               </label>
             </div>
           </>
@@ -620,7 +672,7 @@ export function ConnectionPanel({
 
         {fresh && !(offersEvery && every) && (
           <>
-            <div className={Q}>Add up</div>
+            <div className={Q}>{t('connections.panel.addUp')}</div>
             <div className={A}>
               <label className={CHECK}>
                 <input
@@ -632,7 +684,7 @@ export function ConnectionPanel({
                   }}
                   className="m-0 size-4 accent-[var(--color-accent)]"
                 />
-                Each {one} adds up its {manyRows}
+                <Phrase text={t('connections.panel.eachAddsUp')} parts={sides} />
               </label>
               {withTotal && <div className="fc-pop-enter flex flex-col gap-0.5 border-s-2 border-hairline-strong py-0.5 ps-3">{total}</div>}
             </div>
@@ -641,19 +693,29 @@ export function ConnectionPanel({
 
         {proposal.kind === 'FIGURE' && (
           <>
-            <div className={Q}>Add up</div>
+            <div className={Q}>{t('connections.panel.addUp')}</div>
             <div className={A}>{total}</div>
           </>
         )}
 
         {alongExisting.length > 0 && (
           <>
-            <div className={Q}>Adds up</div>
+            <div className={Q}>{t('connections.panel.addsUp')}</div>
             <div className={A}>
               {alongExisting.map((each) => (
                 <span key={`${each.format}.${each.aggregate.name}`} className={`${CAPTION} pt-1.5`}>
-                  <Bidi>{title(each.format)}</Bidi>’s{' '}
-                  <b className="font-medium text-ink">{each.aggregate.name}</b> adds up its {manyRows}.
+                  <Phrase
+                    text={t('connections.panel.alongCaption')}
+                    parts={{
+                      ...sides,
+                      title: <Bidi>{title(each.format)}</Bidi>,
+                      name: (
+                        <b className="font-medium text-ink">
+                          <Bidi>{each.aggregate.name}</Bidi>
+                        </b>
+                      ),
+                    }}
+                  />
                 </span>
               ))}
             </div>
@@ -666,32 +728,38 @@ export function ConnectionPanel({
           <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden className="transition-transform duration-[var(--duration-base)] group-open:rotate-90 rtl:-scale-x-100 group-open:rtl:-rotate-90">
             <path d="M4.5 3L7.5 6L4.5 9" stroke="currentColor" strokeWidth="1.5" fill="none" />
           </svg>
-          {linking ? 'Name and note' : 'Note'}
+          {t(linking ? 'connections.panel.nameAndNote' : 'connections.panel.note')}
         </summary>
         <div className={`${ROWS} mt-2.5`}>
           {linking && (
             <>
-              <div className={Q}>Column on {Many}</div>
+              <div className={Q}>
+                <Phrase text={t('connections.panel.columnOn')} parts={sides} />
+              </div>
               <div className={A}>
                 <input
                   value={fields.column}
                   readOnly={linkColumn !== undefined}
                   dir="auto"
-                  aria-label={`The new column on ${Many}`}
+                  aria-label={t('connections.panel.newColumnOn', words)}
                   onChange={(event) => setFields({ ...fields, column: event.target.value })}
                   className={`${FIELD} w-[200px] max-w-full ${linkColumn === undefined ? '' : 'text-ink-secondary'}`}
                 />
-                {linkColumn !== undefined && <span className={CAPTION}>Rename it in {Many}’s columns.</span>}
+                {linkColumn !== undefined && (
+                  <span className={CAPTION}>
+                    <Phrase text={t('connections.panel.renameIn')} parts={sides} />
+                  </span>
+                )}
               </div>
             </>
           )}
-          <div className={Q}>Note</div>
+          <div className={Q}>{t('connections.panel.note')}</div>
           <div className={A}>
             <textarea
               value={linking ? fields.linkNote : fields.figureNote}
               rows={2}
               dir="auto"
-              placeholder="Why it’s worth having (optional)"
+              placeholder={t('connections.panel.whyWorth')}
               onChange={(event) =>
                 setFields(
                   linking ? { ...fields, linkNote: event.target.value } : { ...fields, figureNote: event.target.value },
@@ -705,7 +773,16 @@ export function ConnectionPanel({
 
       {existingLink !== undefined && (
         <p className={`${CAPTION} mt-3`}>
-          To link it to another format, drag its <i>{existingLink.column}</i> port there.
+          <Phrase
+            text={t('connections.panel.dragPort')}
+            parts={{
+              column: (
+                <i>
+                  <Bidi>{existingLink.column}</Bidi>
+                </i>
+              ),
+            }}
+          />
         </p>
       )}
 
@@ -719,7 +796,7 @@ export function ConnectionPanel({
 
       {refused.map((refusal) => (
         <p key={`${refusal.reason}-${refusal.column}`} className={BAD}>
-          {plainRefusal(refusal, Many, One)}
+          {plainRefusal(t, refusal, Many, One)}
         </p>
       ))}
       <ExactlyWhy refusals={refused} />
@@ -728,10 +805,16 @@ export function ConnectionPanel({
 
       <Actions>
         <Button variant="primary" disabled={!ready} onClick={() => onSave(drafts)} data-tour="connection-save">
-          {existing !== undefined ? 'Save' : proposal.kind === 'FIGURE' ? 'Add' : 'Connect'}
+          {t(
+            existing !== undefined
+              ? 'connections.panel.save'
+              : proposal.kind === 'FIGURE'
+                ? 'connections.panel.add'
+                : 'connections.panel.connect',
+          )}
         </Button>
         <Button variant="ghost" onClick={onCancel}>
-          Cancel
+          {t('connections.panel.cancel')}
         </Button>
         {existingLink !== undefined && onPropose !== undefined && (
           <Button
@@ -740,13 +823,13 @@ export function ConnectionPanel({
               onPropose({ kind: 'FIGURE', format: pair.one, over: { format: pair.many, column: existingLink.column } })
             }
           >
-            Add up on <Bidi>{One}</Bidi>
+            <Phrase text={t('connections.panel.addUpOn')} parts={sides} />
           </Button>
         )}
         {existing !== undefined && (
           <span className="ms-auto">
             <IconAction
-              label={existing.kind === 'LINK' ? 'Delete this connection' : 'Delete this total'}
+              label={t(existing.kind === 'LINK' ? 'connections.panel.deleteConnection' : 'connections.panel.deleteTotal')}
               tone="negative"
               onClick={() => setDeleting(true)}
             >
@@ -799,10 +882,12 @@ function TotalSentence({
   onName: (name: string) => void
   onUnit: (unit: string) => void
 }) {
-  const rows = every ? `every ${nounOf(many)}` : `its ${pluralOf(many)}`
+  const t = useT()
+  // `one` and `many` here are the two formats' titles.
+  const words = sideWords(many, one)
+  const rows = t(every ? 'connections.total.every' : 'connections.total.its', words)
   const counting = fields.kind === 'COUNT'
   const ordered = isOrdered(fields.kind)
-  const noun = nounOf(many)
   const names =
     source === undefined
       ? []
@@ -812,13 +897,15 @@ function TotalSentence({
             name: each.name,
             says:
               column !== undefined
-                ? `its ${link ?? ''}’s ${column}`
+                ? t('connections.total.linkColumn', { link: link ?? '', column })
                 : each.says === 'computed'
-                  ? `computed on the ${noun}`
-                  : `on the ${noun}`,
+                  ? t('connections.total.computedOn', words)
+                  : t('connections.total.on', words),
           }
         })
-  const links = (source?.columns ?? []).filter((each) => each.type === 'link').map((each) => `${each.name}’s`)
+  const links = (source?.columns ?? [])
+    .filter((each) => each.type === 'link')
+    .map((each) => t('connections.total.linkOf', { name: each.name }))
   const formula = (aria: string): ReactNode => (
     <FormulaField
       look="blank"
@@ -826,86 +913,98 @@ function TotalSentence({
       names={names}
       label={aria}
       tour="total-of"
-      placeholder={ordered ? 'rate' : 'hours * rate'}
+      placeholder={t(ordered ? 'connections.total.rateExample' : 'connections.total.formulaExample')}
       onChange={onExpression}
     />
   )
+  // The sentence's blanks, which the catalogue's sentence puts where its grammar does.
+  const blanks: Record<string, ReactNode> = {
+    One: <Bidi>{one}</Bidi>,
+    kind: (
+      <Pick
+        label={t('connections.total.kindLabel')}
+        tour="total-kind"
+        value={fields.kind}
+        options={kindsOf(t)}
+        onPick={(kind) => onKind(kind as AggregateKind)}
+      />
+    ),
+    rows: <Bidi>{rows}</Bidi>,
+    formula: counting
+      ? undefined
+      : formula(ordered ? t('connections.total.whichValue') : t('connections.total.formulaLabel', words)),
+    by: ordered ? (
+      <Pick
+        label={t('connections.total.pickedBy')}
+        value={fields.by}
+        options={orders.map((each) => ({ value: each, label: each }))}
+        onPick={onBy}
+      />
+    ) : undefined,
+    name: (
+      <input
+        className={BLANK}
+        value={fields.figure}
+        size={Math.max(8, fields.figure.length + 1)}
+        dir="auto"
+        aria-label={t('connections.total.nameLabel')}
+        onChange={(event) => onName(event.target.value)}
+      />
+    ),
+    unit:
+      !counting && !money ? (
+        <Phrase
+          text={t('connections.total.unit')}
+          parts={{
+            unit: (
+              <input
+                className={BLANK}
+                value={fields.unit}
+                placeholder={unit ?? ''}
+                size={Math.max(4, fields.unit.length + 1, (unit ?? '').length + 1)}
+                aria-label={t('connections.total.unitLabel')}
+                onChange={(event) => onUnit(event.target.value)}
+              />
+            ),
+          }}
+        />
+      ) : undefined,
+  }
   return (
     <>
       <p className={SAY}>
-        <Bidi>{one}</Bidi> shows the{' '}
-        <Pick
-          label="The kind of total"
-          tour="total-kind"
-          value={fields.kind}
-          options={KINDS}
-          onPick={(kind) => onKind(kind as AggregateKind)}
+        <Phrase
+          text={t(counting ? 'connections.total.count' : ordered ? 'connections.total.ordered' : 'connections.total.of')}
+          parts={blanks}
         />
-        {counting && <> of {rows}</>}
-        {!counting && !ordered && (
-          <>
-            {' '}
-            of {formula(`What is added up on each ${noun}`)} from {rows}
-          </>
-        )}
-        {ordered && (
-          <>
-            {' '}
-            {formula('Which value')} of {rows}, by{' '}
-            <Pick
-              label="Picked by"
-              value={fields.by}
-              options={orders.map((each) => ({ value: each, label: each }))}
-              onPick={onBy}
-            />
-          </>
-        )}
-        , called{' '}
-        <input
-          className={BLANK}
-          value={fields.figure}
-          size={Math.max(8, fields.figure.length + 1)}
-          dir="auto"
-          aria-label="Name of the total"
-          onChange={(event) => onName(event.target.value)}
-        />
-        {!counting && !money && (
-          <>
-            , in{' '}
-            <input
-              className={BLANK}
-              value={fields.unit}
-              placeholder={unit ?? ''}
-              size={Math.max(4, fields.unit.length + 1, (unit ?? '').length + 1)}
-              aria-label="Unit"
-              onChange={(event) => onUnit(event.target.value)}
-            />
-          </>
-        )}
-        .
       </p>
       {!counting && !money && (
         <span className={CAPTION}>
           {names.length === 0
-            ? `${many} has no numbers yet.`
-            : `Use its columns${links.length === 0 ? '' : `, and its ${listed(links)}`}. Typing shows what fits.`}
-          {unit !== undefined && ` Its ${rows} come out in ${unit}.`}
+            ? t('connections.total.noNumbers', words)
+            : links.length === 0
+              ? t('connections.total.useColumns')
+              : t('connections.total.useColumnsAnd', { links: andList(t, links) })}
+          {unit !== undefined && <> {t('connections.total.comesOut', { rows, unit })}</>}
         </span>
       )}
-      {!counting && money && <span className={CAPTION}>Money, so it stays in the currency of {rows}.</span>}
+      {!counting && money && <span className={CAPTION}>{t('connections.total.money', { rows })}</span>}
     </>
   )
 }
 
-const KINDS: readonly PickOption[] = [
-  { value: 'SUM', label: 'sum', detail: 'adds them up' },
-  { value: 'COUNT', label: 'count', detail: 'how many' },
-  { value: 'AVERAGE', label: 'average' },
-  { value: 'MINIMUM', label: kindWord('MINIMUM') },
-  { value: 'MAXIMUM', label: kindWord('MAXIMUM') },
-  { value: 'LATEST', label: 'latest', detail: 'one row' },
-  { value: 'EARLIEST', label: 'earliest', detail: 'one row' },
-]
+/** The kinds of total, in the window's words: *smallest* and *largest*, where the declaration says `minimum` and `maximum`. */
+function kindsOf(t: Translate): readonly PickOption[] {
+  return [
+    { value: 'SUM', label: t('connections.total.kinds.sum'), detail: t('connections.total.addsThemUp') },
+    { value: 'COUNT', label: t('connections.total.kinds.count'), detail: t('connections.total.howMany') },
+    { value: 'AVERAGE', label: t('connections.total.kinds.average') },
+    { value: 'MINIMUM', label: t('connections.total.kinds.smallest') },
+    { value: 'MAXIMUM', label: t('connections.total.kinds.largest') },
+    { value: 'LATEST', label: t('connections.total.kinds.latest'), detail: t('connections.total.oneRow') },
+    { value: 'EARLIEST', label: t('connections.total.kinds.earliest'), detail: t('connections.total.oneRow') },
+  ]
+}
 
 /* ------------------------------------------------------------- the menus */
 
@@ -1347,6 +1446,7 @@ function written(
  * table's name and not a thing anybody declared.
  */
 function willSay(
+  t: Translate,
   proposal: Proposal,
   existing: Edge | undefined,
   fields: Fields,
@@ -1355,49 +1455,37 @@ function willSay(
   pair: { readonly many: string; readonly one: string },
   declarations: readonly FormatDeclaration[],
 ): ReactNode | undefined {
-  const b = (text: string): ReactNode => <b className="font-medium text-ink">{text}</b>
-  const column = fields.column.trim()
-  const figure = fields.figure.trim()
-  const stored = ' It’s computed each time; nothing is stored.'
+  const b = (text: string): ReactNode => (
+    <b className="font-medium text-ink">
+      <Bidi>{text}</Bidi>
+    </b>
+  )
+  const sides = sideParts(Many, One)
+  const column = b(fields.column.trim())
+  const figure = b(fields.figure.trim())
   switch (proposal.kind) {
     case 'LINK': {
       if (proposal.column === undefined) {
-        return (
-          <>
-            Adds a {b(column)} column to <Bidi>{Many}</Bidi>.
-          </>
-        )
+        return <Phrase text={t('connections.will.addsColumn')} parts={{ ...sides, column }} />
       }
       if (existing !== undefined) return undefined
       if (proposal.retyping) {
-        return (
-          <>
-            Turns <Bidi>{Many}</Bidi>’s {b(proposal.column)} column into the connection.
-          </>
-        )
+        return <Phrase text={t('connections.will.turns')} parts={{ ...sides, column: b(proposal.column) }} />
       }
       const was = declarations
         .find((each) => each.name === pair.many)
         ?.columns.find((each) => each.name === proposal.column)?.target
       return was === proposal.to ? undefined : (
-        <>
-          Points {b(proposal.column)} at <Bidi>{One}</Bidi> instead.
-        </>
+        <Phrase text={t('connections.will.points')} parts={{ ...sides, column: b(proposal.column) }} />
       )
     }
     case 'LINK_AND_FIGURE':
-      return (
-        <>
-          Adds a {b(column)} column to <Bidi>{Many}</Bidi>, and {b(figure)} to <Bidi>{One}</Bidi>.
-        </>
-      )
+      return <Phrase text={t('connections.will.addsBoth')} parts={{ ...sides, column, figure }} />
     case 'FIGURE':
       return existing === undefined ? (
-        <>
-          Adds {b(figure)} to <Bidi>{One}</Bidi>.{stored}
-        </>
+        <Phrase text={t('connections.will.addsFigure')} parts={{ ...sides, figure }} />
       ) : (
-        stored.trim()
+        t('connections.will.computed')
       )
     case 'NOTHING':
       return undefined
@@ -1405,19 +1493,55 @@ function willSay(
 }
 
 /** A refusal the window shows under its answers, said plainly for its kind. */
-function plainRefusal(refusal: Refusal, Many: string, One: string): string {
+function plainRefusal(t: Translate, refusal: Refusal, Many: string, One: string): string {
   const count = rowsIn(refusal)
-  const who = count === undefined ? pluralOf(Many) : counted(count, Many)
+  const parts = {
+    ...sideWords(Many, One),
+    who: whoText(t, count, Many),
+    Who: whoText(t, count, Many, true),
+    column: refusal.column ?? '',
+  }
   switch (refusal.reason) {
     case 'REQUIRED_ON_ROWS':
-      return `${capitalize(who)} ${count === 1 ? 'is' : 'are'} already recorded without a ${nounOf(One)}, so it can’t be required yet.`
+      return t(countKey('connections.refusal.required', count ?? 0), parts)
     case 'CONSTRAINT_CHANGED':
-      return `That can’t change while ${who} ${count === 1 ? 'has' : 'have'} something in ${refusal.column}.`
+      return t(countKey('connections.refusal.constraint', count ?? 0), parts)
     case 'DROP_WITH_DATA':
-      return `${refusal.column} can’t go while ${who} ${count === 1 ? 'has' : 'have'} something in it.`
+      return t(countKey('connections.refusal.drop', count ?? 0), parts)
     default:
-      return 'The document can’t take this as it stands.'
+      return t('connections.refusal.cantTake')
   }
+}
+
+/** The two formats' parts of a catalogue sentence (see `connections` in `src/i18n/en/`): titles, nouns and the plural. */
+function sideWords(Many: string, One: string): Readonly<Record<'Many' | 'One' | 'many' | 'manyRows' | 'one', string>> {
+  return { Many, One, many: nounOf(Many), manyRows: pluralOf(Many), one: nounOf(One) }
+}
+
+/** The same parts, each in its `Bidi`: they are the document's words inside the screen's sentence. */
+function sideParts(Many: string, One: string): Readonly<Record<string, ReactNode>> {
+  return Object.fromEntries(
+    Object.entries(sideWords(Many, One)).map(([name, text]) => [name, <Bidi key={name}>{text}</Bidi>]),
+  )
+}
+
+/**
+ * The rows a sentence is about — *3 work days*, or *work days* when the count
+ * is not known — capitalised when it starts the sentence.
+ */
+function whoText(t: Translate, count: number | undefined, Many: string, start = false): string {
+  const words = sideWords(Many, '')
+  const said =
+    count === undefined
+      ? t('connections.panel.whoAll', words)
+      : t(countKey('connections.panel.who', count), { ...words, count })
+  return start ? capitalize(said) : said
+}
+
+/** *a, b and c*, in the screen's language. */
+function andList(t: Translate, items: readonly string[]): string {
+  if (items.length <= 1) return items[0] ?? ''
+  return t('views.and', { rest: items.slice(0, -1).join(', '), last: items.at(-1) ?? '' })
 }
 
 /** How many rows a refusal is about, read from its own sentence: *12 rows in…*. */
@@ -1430,19 +1554,20 @@ function rowsIn(refusal: Refusal): number | undefined {
 const UNPLACED_SHOWN = 12
 
 /** Why one row stays empty, in the window's words: *no paycheck for March 2026*. */
-function unplacedReason(each: Unplaced, plan: FindPlan, One: string): string {
-  const one = nounOf(One)
-  if (each.kind === 'NO_DATE') return `no ${plan.foundBy.from} to match by`
+function unplacedReason(t: Translate, calendar: DateWords, each: Unplaced, plan: FindPlan, One: string): string {
+  if (each.kind === 'NO_DATE') return t('connections.unplaced.noDate', { column: plan.foundBy.from })
   const at = matchedOn(plan.foundBy, each.date)
   const month = plan.foundBy.grain === 'MONTH' ? parseYearMonth(at) : undefined
-  const when = month === undefined ? `on ${at}` : `for ${formatYearMonth(month)}`
-  if (each.kind === 'NONE') return `no ${one} ${when}`
-  const how = each.names.length === 2 ? 'two' : each.names.length === 3 ? 'three' : String(each.names.length)
-  return `${how} ${pluralOf(One)} ${when} (${each.names.join(', ')})`
-}
-
-function counted(count: number, title: string): string {
-  return count === 1 ? `1 ${nounOf(title)}` : `${String(count)} ${pluralOf(title)}`
+  const when =
+    month === undefined
+      ? t('connections.unplaced.on', { date: at })
+      : t('connections.unplaced.for', { month: calendar.yearMonth(month) })
+  const words = { One, one: nounOf(One), ones: pluralOf(One), when }
+  if (each.kind === 'NONE') return t('connections.unplaced.none', words)
+  const count = each.names.length
+  const key =
+    count === 2 ? 'connections.unplaced.two' : count === 3 ? 'connections.unplaced.three' : 'connections.unplaced.several'
+  return t(key, { ...words, count, names: each.names.join(', ') })
 }
 
 /** The two port words in a sentence are the port's words, so they are set as such. */
@@ -1488,11 +1613,12 @@ const BAD = 'mt-1.5 mb-0 max-w-[62ch] text-caption text-negative'
 
 /** The reconciler's own sentences, word for word, folded under the plain one (D-138). */
 function ExactlyWhy({ refusals }: { refusals: readonly Refusal[] }) {
+  const t = useT()
   if (refusals.length === 0) return undefined
   return (
     <details className="mt-1.5 max-w-[70ch] text-caption text-ink-secondary">
       <summary className="cursor-pointer list-none text-ink-secondary [&::-webkit-details-marker]:hidden">
-        Exactly why
+        {t('connections.panel.exactlyWhy')}
       </summary>
       {refusals.map((refusal) => (
         <p key={`${refusal.reason}-${refusal.column}`} className="m-0">
@@ -1505,10 +1631,11 @@ function ExactlyWhy({ refusals }: { refusals: readonly Refusal[] }) {
 
 /** *Many work days —< one paycheck*: the relationship, before the sentence. */
 function Relation({ many, one }: { many: string; one: string }) {
+  const t = useT()
   return (
     <div className="mb-1 flex flex-wrap items-center gap-2 text-caption text-ink-secondary" data-relation>
       <span>
-        <b className="font-medium text-ink">Many</b> <Bidi>{pluralOf(many)}</Bidi>
+        <b className="font-medium text-ink">{t('connections.panel.relationMany')}</b> <Bidi>{pluralOf(many)}</Bidi>
       </span>
       <svg width="64" height="16" viewBox="0 0 64 16" aria-hidden className="shrink-0">
         <path d="M0 8H64" stroke="currentColor" strokeWidth="1.5" />
@@ -1516,7 +1643,7 @@ function Relation({ many, one }: { many: string; one: string }) {
         <path d="M57 2V14" stroke="currentColor" strokeWidth="1.5" />
       </svg>
       <span>
-        <b className="font-medium text-ink">one</b> <Bidi>{nounOf(one)}</Bidi>
+        <b className="font-medium text-ink">{t('connections.panel.relationOne')}</b> <Bidi>{nounOf(one)}</Bidi>
       </span>
     </div>
   )

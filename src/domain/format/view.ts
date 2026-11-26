@@ -180,6 +180,31 @@ export const SHOW_AS_HINT: Readonly<Partial<Record<ShowAs, string>>> = {
 }
 
 /**
+ * **A sentence as a screen says it** (M64 F20, D-632): the catalogue's key and
+ * the parts it is filled with. The engine names the words and the screen says
+ * them with `t(said.key, said.parts)`; a conversation keeps its English. The
+ * key is a literal the catalogue holds — typed here as a string, so the engine
+ * imports nothing from `src/i18n/`, and checked where `t` takes it.
+ */
+export interface Said<K extends string = string> {
+  readonly key: K
+  readonly parts?: Readonly<Record<string, string | number>>
+}
+
+/** The ways a hint is said beside. */
+type HintedWay = 'line' | 'markdown' | 'mono' | 'bar' | 'slider' | 'unit' | 'steps' | 'card'
+
+/** A way's label by its catalogue key — what a screen says; `SHOW_AS_LABEL` stays the English. */
+export function showAsKey(way: ShowAs): `formats.showAs.label.${ShowAs}` {
+  return `formats.showAs.label.${way}`
+}
+
+/** A way's hint by its catalogue key, where it has one (`SHOW_AS_HINT`'s). */
+export function showAsHintKey(way: ShowAs): `formats.showAs.hint.${HintedWay}` | undefined {
+  return Object.hasOwn(SHOW_AS_HINT, way) ? `formats.showAs.hint.${way as HintedWay}` : undefined
+}
+
+/**
  * The words M26 U6 kept that Show as retired: the figure was a `field` and the
  * name a `search`. Read as no choice — the type's default — and dropped on the
  * next write, so a document arranged before still opens.
@@ -1508,6 +1533,46 @@ export function relativeDay(date: string, today: string): string | undefined {
   return days > 0 ? `in ${said}` : `${said} ago`
 }
 
+/** A date's weekday, Sunday 0 to Saturday 6 — or nothing when it is not a date. A screen says it in its own words. */
+export function weekdayOf(date: string): number | undefined {
+  const count = dayCount(date)
+  return count === undefined ? undefined : (((count + 4) % 7) + 7) % 7
+}
+
+/** The keys `relativeDaySaid` says a date against today with. */
+export type WhenKey = `views.when.${
+  | 'today'
+  | 'tomorrow'
+  | 'yesterday'
+  | 'inDays'
+  | 'daysAgo'
+  | 'inWeeks'
+  | 'weeksAgo'
+  | 'inMonths'
+  | 'monthsAgo'
+  | 'inYears'
+  | 'yearsAgo'}`
+
+/**
+ * `relativeDay` as a screen says it (M64 F18, D-632): the same spans, by key,
+ * with the count in `{count}`. `relativeDay` keeps the English a conversation reads.
+ */
+export function relativeDaySaid(date: string, today: string): Said<WhenKey> | undefined {
+  const then = dayCount(date)
+  const now = dayCount(today)
+  if (then === undefined || now === undefined) return undefined
+  const days = then - now
+  if (days === 0) return { key: 'views.when.today' }
+  if (days === 1) return { key: 'views.when.tomorrow' }
+  if (days === -1) return { key: 'views.when.yesterday' }
+  const span = Math.abs(days)
+  const ahead = days > 0
+  if (span < 14) return { key: ahead ? 'views.when.inDays' : 'views.when.daysAgo', parts: { count: span } }
+  if (span < 60) return { key: ahead ? 'views.when.inWeeks' : 'views.when.weeksAgo', parts: { count: Math.round(span / 7) } }
+  if (span < 730) return { key: ahead ? 'views.when.inMonths' : 'views.when.monthsAgo', parts: { count: Math.round(span / 30.44) } }
+  return { key: ahead ? 'views.when.inYears' : 'views.when.yearsAgo', parts: { count: Math.round(span / 365.25) } }
+}
+
 /** A month against today's: `this month`, `next month`, `3 months ago`. */
 export function relativeMonth(month: string, today: string): string | undefined {
   const then = monthCount(month)
@@ -1824,6 +1889,35 @@ export function tickWords(
     : { header: `Ticking marks ${column} ${on}`, mark: `Mark ${on}`, undo: `Undo: back to ${back}` }
 }
 
+/** The keys `tickSaid` says a tick with. */
+export type TickKey = `formats.tick.${'header' | 'headerYes' | 'headerNo' | 'mark' | 'markYes' | 'markNo' | 'undo' | 'undoYes' | 'undoNo'}`
+
+/**
+ * `tickWords` as a screen says it (M64 F20): the same three sentences, by key —
+ * a boolean's *yes* and *no* are the catalogue's words, an enum's member the
+ * document's, in `{on}`.
+ */
+export function tickSaid(
+  done: { readonly column: BoardColumn; readonly members: readonly string[] },
+  before?: string,
+): { readonly header: Said<TickKey>; readonly mark: Said<TickKey>; readonly undo: Said<TickKey> } {
+  const column = done.column.name.replace(/_/g, ' ')
+  const on = tickValue(done, true)
+  const back = tickValue(done, false, before)
+  if (done.column.type === 'boolean') {
+    return {
+      header: { key: on === 'true' ? 'formats.tick.headerYes' : 'formats.tick.headerNo', parts: { column } },
+      mark: { key: on === 'true' ? 'formats.tick.markYes' : 'formats.tick.markNo', parts: { column } },
+      undo: { key: back === 'true' ? 'formats.tick.undoYes' : 'formats.tick.undoNo', parts: { column } },
+    }
+  }
+  return {
+    header: { key: 'formats.tick.header', parts: { column, on: memberWords(done.column, on) } },
+    mark: { key: 'formats.tick.mark', parts: { on: memberWords(done.column, on) } },
+    undo: { key: 'formats.tick.undo', parts: { on: memberWords(done.column, back) } },
+  }
+}
+
 /** Where a date falls against today, as the list groups by a date. */
 export type DueBucket = 'late' | 'today' | 'tomorrow' | 'week' | 'later' | 'none'
 
@@ -1867,6 +1961,26 @@ export function dueText(
   if (days === 1) return { text: 'tomorrow', late: false }
   if (days < 7) return { text: `${DAY_WORDS[(((then + 4) % 7) + 7) % 7] ?? ''}, in ${String(days)} days`, late: false }
   return { text: short, late: false }
+}
+
+/** The keys `dueSaidOf` says a due with. */
+export type DueKey = `views.due.${'today' | 'tomorrow' | 'yesterday' | 'late' | 'soon' | 'date' | 'dateYear'}`
+
+/**
+ * **A due as a screen says it** (M64 F18, D-632): which of `dueText`'s words
+ * it was, by key, with its count. The list's picture keeps `dueText`'s English
+ * and the day itself (`ListLine`'s date cell, read with no today beside it), so
+ * this reads back the few shapes `dueText` writes — the screen says the
+ * weekday, the date and the year from the day in its own words. Anything else
+ * is the date, as `dueText` falls back to it.
+ */
+export function dueSaidOf(text: string): Said<DueKey> {
+  if (text === 'today' || text === 'tomorrow' || text === 'yesterday') return { key: `views.due.${text}` }
+  const late = /^(\d+) days late$/.exec(text)?.[1]
+  if (late !== undefined) return { key: 'views.due.late', parts: { count: Number(late) } }
+  const soon = /^[A-Z][a-z]{2}, in (\d+) days$/.exec(text)?.[1]
+  if (soon !== undefined) return { key: 'views.due.soon', parts: { count: Number(soon) } }
+  return { key: /\s\d{4}$/.test(text) ? 'views.due.dateYear' : 'views.due.date' }
 }
 
 /** One group of a list: its head, its rows, and the values a row added in it takes. */

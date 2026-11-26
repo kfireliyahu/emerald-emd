@@ -8,6 +8,8 @@ import {
   type DraftProblem,
   type FormatDraft,
 } from '@/domain/format/draft.ts'
+import { translate } from '@/i18n/catalogue.ts'
+import type { Translate } from '@/i18n/current.ts'
 
 /**
  * What the shape panel is open on: one column, what has to add up, or — when a
@@ -122,9 +124,14 @@ export interface Creation {
  * reasoning applied to the format's own questions. What has to add up was a
  * third until M29 F4 (D-345): a format with no identity is one where nothing
  * has to, and Create does not wait for anybody to say so. `draft` is the one
- * the problems were judged on (pruned).
+ * the problems were judged on (pruned); `t` says what it waits on (M64 F20),
+ * in English when none is given.
  */
-export function creationOf(draft: FormatDraft, problems: readonly DraftProblem[]): Creation {
+export function creationOf(
+  draft: FormatDraft,
+  problems: readonly DraftProblem[],
+  t: Translate = (key, parts) => translate('en', key, parts),
+): Creation {
   const unnamed = headIsBlank(draft)
   const columnless = draft.columns.length === 0
   const shown = problems.filter((each) => {
@@ -136,7 +143,7 @@ export function creationOf(draft: FormatDraft, problems: readonly DraftProblem[]
   })
   return {
     shown,
-    waiting: [...(unnamed ? ['what one of them is called'] : []), ...(columnless ? ['a column'] : [])],
+    waiting: [...(unnamed ? [t('formats.make.waitName')] : []), ...(columnless ? [t('formats.make.waitColumn')] : [])],
   }
 }
 

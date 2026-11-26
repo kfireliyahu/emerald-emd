@@ -43,8 +43,8 @@ import {
   defaultBlockWidth,
   entryLabel,
   sameBlock,
+  tickSaid,
   tickValue,
-  tickWords,
   totalNameRefusal,
   type DashboardBlock,
   type SavedView,
@@ -52,7 +52,8 @@ import {
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Phrase } from '@/ui/components/Phrase.tsx'
-import { useT } from '@/i18n/current.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useT, type Translate } from '@/i18n/current.ts'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { useDismiss } from '@/ui/components/useDismiss.ts'
@@ -88,6 +89,7 @@ import { defaultWidth, ResizeHandle } from '@/ui/formats/ResizeHandle.tsx'
 import {
   ChartForm,
   InputViewForm,
+  kindWord,
   newChart,
   newInput,
   newView,
@@ -229,7 +231,7 @@ export function DashboardView({
         {/* *An empty state is one sentence* and one text action (M54 F3). */}
         {blocks.length === 0 && !answered && (
           <p className="col-span-full pt-6 pb-2 text-ink-secondary">
-            Nothing on this dashboard yet.
+            {t('views.dashboard.none')}
             {readOnly === undefined && (
               <>
                 {' '}
@@ -241,7 +243,7 @@ export function DashboardView({
                   }}
                   className="text-accent hover:underline hover:underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
                 >
-                  Add a block
+                  {t('dashboards.addBlock')}
                 </button>
               </>
             )}
@@ -332,7 +334,7 @@ export function DashboardView({
               className="flex min-h-24 w-full items-center justify-center gap-2 border border-dashed border-hairline-strong text-body text-ink-secondary hover:border-ink-tertiary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
             >
               <ActionGlyph name="plus" size={14} />
-              Add a block
+              {t('dashboards.addBlock')}
             </button>
             {menu === ADD && (
               <AddMenu
@@ -459,6 +461,14 @@ function tableColumns(width: number): number {
  * and rows while it is dragged, and written once when it is let go. Each is
  * also a handle the keyboard moves a column or a row at a time.
  */
+/** A block's size in words: its width in columns, its height in rows, or none. */
+function sizeWords(t: Translate, width: number, height: number | undefined): { readonly wide: string; readonly tall: string } {
+  return {
+    wide: t(countKey('dashboards.size.columns', width), { count: width }),
+    tall: height === undefined ? t('dashboards.size.tall') : t(countKey('dashboards.size.rows', height), { count: height }),
+  }
+}
+
 function Edges({
   box,
   grid,
@@ -476,6 +486,7 @@ function Edges({
   readonly onSizing: (size: BlockSize | undefined) => void
   readonly onSized: (size: BlockSize) => void
 }) {
+  const t = useT()
   /** The grid's columns now and one column's width, and the block as it is drawn. */
   const measure = (): (GridMeasure & { readonly rect: DOMRect }) | undefined => {
     const block = box.current
@@ -526,8 +537,7 @@ function Edges({
     onSized(stepped)
   }
 
-  const tall = height === undefined ? 'as tall as it holds' : `${String(height)} rows`
-  const wide = `${String(width)} ${width === 1 ? 'column' : 'columns'}`
+  const { wide, tall } = sizeWords(t, width, height)
   const line = 'bg-accent opacity-0 transition-opacity duration-[var(--micro)] group-hover/edge:opacity-100 group-focus-visible/edge:opacity-100'
   // **A focusable separator says its value** (WAI-ARIA, M54 F3): a width in
   // columns, a height in rows — none, as tall as it holds, is 0 and said so.
@@ -538,7 +548,7 @@ function Edges({
       <span
         role="separator"
         aria-orientation="vertical"
-        aria-label="Width. Drag, or press the left and right arrows."
+        aria-label={t('dashboards.size.width')}
         {...across}
         tabIndex={0}
         onPointerDown={down('right')}
@@ -550,7 +560,7 @@ function Edges({
       <span
         role="separator"
         aria-orientation="horizontal"
-        aria-label="Height. Drag, or press the up and down arrows."
+        aria-label={t('dashboards.size.height')}
         {...along}
         tabIndex={0}
         onPointerDown={down('bottom')}
@@ -563,13 +573,13 @@ function Edges({
           on focus it draws the ring every other stop does. */}
       <span
         role="separator"
-        aria-label="Size. Drag, or press the arrows."
+        aria-label={t('dashboards.size.both')}
         {...across}
         aria-valuetext={`${wide}, ${tall}`}
         tabIndex={0}
         onPointerDown={down('corner')}
         onKeyDown={key('corner')}
-        title="Drag to resize"
+        title={t('dashboards.size.resize')}
         className="absolute -end-1.5 -bottom-1.5 z-20 flex size-4 cursor-nwse-resize items-end justify-end p-0.5 text-ink-secondary opacity-0 transition-opacity duration-[var(--micro)] group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
       >
         <svg width="8" height="8" viewBox="0 0 8 8" stroke="currentColor" strokeWidth="1.2" aria-hidden>
@@ -625,6 +635,7 @@ function Block({
     | { readonly start: () => void; readonly over: () => void; readonly drop: () => void; readonly end: () => void }
     | undefined
 }) {
+  const t = useT()
   const box = useRef<HTMLDivElement>(null)
   const more = useRef<HTMLButtonElement>(null)
   const list = useRef<HTMLDivElement>(null)
@@ -695,7 +706,7 @@ function Block({
             type="button"
             onClick={onOpen}
             disabled={gone !== undefined}
-            title={`Open ${title} in full`}
+            title={t('dashboards.block.open', { title })}
             className="flex min-w-0 text-start text-body font-semibold decoration-hairline-strong underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:no-underline"
           >
             <Bidi className="min-w-0 truncate">{title}</Bidi>
@@ -711,15 +722,15 @@ function Block({
               menu !== undefined ? 'opacity-100' : 'opacity-0 group-focus-within:opacity-100 group-hover:opacity-100'
             }`}
           >
-            <span className="fc-icon-action cursor-grab" title="Drag to move" aria-hidden>
+            <span className="fc-icon-action cursor-grab" title={t('dashboards.block.dragMove')} aria-hidden>
               <Grip />
             </span>
             {/* *An icon is an action*: a square 28px target, a 16px icon (M54 F3). */}
             <button
               ref={more}
               type="button"
-              aria-label={`${title}: more`}
-              title="More"
+              aria-label={t('dashboards.block.moreOf', { title })}
+              title={t('dashboards.block.more')}
               aria-haspopup="menu"
               aria-expanded={menu !== undefined}
               onClick={onMenu}
@@ -788,14 +799,14 @@ function Block({
       )}
       {sizing !== undefined && (
         <span className="pointer-events-none absolute end-3 bottom-2 z-10 border border-hairline-strong bg-elevated px-2 py-0.5 text-caption text-ink-secondary tabular-nums">
-          {width} {width === 1 ? 'column' : 'columns'} · {height === undefined ? 'as tall as it holds' : `${String(height)} rows`}
+          {sizeWords(t, width, height).wide} · {sizeWords(t, width, height).tall}
         </span>
       )}
       {menu !== undefined && (
         <div
           ref={list}
           role="menu"
-          aria-label={`${title}: more`}
+          aria-label={t('dashboards.block.moreOf', { title })}
           onKeyDown={(event) => {
             // Escape closes it and gives the keyboard back to ⋯; Tab closes it and goes on.
             if (event.key === 'Escape') {
@@ -813,24 +824,26 @@ function Block({
           className="fc-pop-enter absolute top-10 end-2 z-20 min-w-60 border border-hairline-strong bg-elevated py-1 shadow-pop"
         >
           <MenuItem onClick={onOpen} disabled={gone !== undefined}>
-            Open in full
+            {t('dashboards.block.openInFull')}
           </MenuItem>
           <Sep />
           <MenuItem onClick={() => onMove(-1)} disabled={menu.at === 0}>
-            Move earlier
+            {t('dashboards.block.moveEarlier')}
           </MenuItem>
           <MenuItem onClick={() => onMove(1)} disabled={menu.at === menu.count - 1}>
-            Move later
+            {t('dashboards.block.moveLater')}
           </MenuItem>
           <Sep />
-          <MenuItem onClick={onRemove}>Remove from this dashboard</MenuItem>
+          <MenuItem onClick={onRemove}>{t('dashboards.block.remove')}</MenuItem>
           <p className="mt-1 max-w-[300px] border-t border-hairline px-3 pt-2 pb-1 text-caption text-ink-secondary">
-            {block.kind === 'total'
-              ? 'A headline total lives only on this dashboard, so it goes with the block.'
-              : block.kind === 'saved'
-                ? 'The saved view itself stays.'
-                : // M53 F3: and where it is deleted, since it stays.
-                  `The chart itself stays — delete it under ${declaration?.title ?? block.format} in the rail, or on its tab.`}
+            {block.kind === 'total' ? (
+              t('dashboards.block.totalGoes')
+            ) : block.kind === 'saved' ? (
+              t('dashboards.block.savedStays')
+            ) : (
+              // M53 F3: and where it is deleted, since it stays.
+              <Phrase text={t('dashboards.block.chartStays')} parts={{ format: <Bidi>{declaration?.title ?? block.format}</Bidi> }} />
+            )}
           </p>
         </div>
       )}
@@ -965,8 +978,15 @@ function RollupBody({
   /** A block given a height draws its chart to it; one with none, as before. */
   readonly height: number | undefined
 }) {
+  const t = useT()
   const result = runRollup(db, declaration, name, declarations, { today: toISODate(today()) })
-  if (result === undefined) return <Nothing>{declaration.title} has no chart called {rollupWords(name)} any more.</Nothing>
+  if (result === undefined) {
+    return (
+      <Nothing>
+        <Phrase text={t('dashboards.body.noChart')} parts={{ format: <Bidi>{declaration.title}</Bidi>, name: <Bidi>{rollupWords(name)}</Bidi> }} />
+      </Nothing>
+    )
+  }
   const chart = rollupChart(result.groups, {
     names: result.labels,
     by: result.rollup.by !== undefined,
@@ -975,7 +995,7 @@ function RollupBody({
     count: result.rollup.kind === 'COUNT' ? { one: nounOf(declaration.title), many: pluralOf(declaration.title) } : undefined,
   })
   const drawable = chart.series.some((each) => each.points.some((one) => drawnValue(one, chart.axis) !== undefined))
-  if (!drawable) return <Nothing>No row falls in it yet.</Nothing>
+  if (!drawable) return <Nothing>{t('dashboards.body.empty')}</Nothing>
   return (
     <Chart
       labels={chart.labels}
@@ -984,7 +1004,7 @@ function RollupBody({
       axis={chart.axis}
       kind="bars"
       title={rollupSentence(result.rollup, declaration)}
-      labelHeading="month"
+      labelHeading={t('dashboards.rollup.month')}
       height={height ?? 150}
     />
   )
@@ -1017,11 +1037,28 @@ function SavedBody({
   readonly fill: boolean
   readonly width: number
 }) {
+  const t = useT()
   const view = savedView(db, declaration.name, name)
-  if (view === undefined) return <Nothing>{declaration.title} has no saved view called {name} any more.</Nothing>
+  if (view === undefined) {
+    return (
+      <Nothing>
+        <Phrase text={t('dashboards.body.noView')} parts={{ format: <Bidi>{declaration.title}</Bidi>, name: <Bidi>{name}</Bidi> }} />
+      </Nothing>
+    )
+  }
   const held = addressView(view.address)
   const read = filterQuery(db, declaration, held.filter, declarations, day)
-  if (!read.ok) return <Nothing>{read.error.kind === 'NO_COLUMN' ? `${declaration.title} has no column ${read.error.name} any more.` : read.error.reason}</Nothing>
+  if (!read.ok) {
+    return (
+      <Nothing>
+        {read.error.kind === 'NO_COLUMN' ? (
+          <Phrase text={t('dashboards.body.noColumn')} parts={{ format: <Bidi>{declaration.title}</Bidi>, name: <Bidi>{read.error.name}</Bidi> }} />
+        ) : (
+          read.error.reason
+        )}
+      </Nothing>
+    )
+  }
   const query: RowQuery = {
     ...read.value,
     ...(held.order === undefined ? {} : { order: held.order.column, descending: held.order.descending }),
@@ -1033,10 +1070,14 @@ function SavedBody({
         onClick={onMore}
         className="text-caption text-accent hover:underline hover:underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
       >
-        {count} more
+        {t('dashboards.body.more', { count: String(count) })}
       </button>
     ) : null
-  const nothing = <Nothing>Nothing matches: {savedWords(view)}.</Nothing>
+  const nothing = (
+    <Nothing>
+      <Phrase text={t('dashboards.body.nothing')} parts={{ words: <Bidi>{savedWords(view)}</Bidi> }} />
+    </Nothing>
+  )
   const entry: Entry = (row) => dashboardEntry(declaration.name, row, view.address, dashboard)
 
   if (view.kind === 'list') return <ListBody db={db} declaration={declaration} declarations={declarations} query={query} day={day} locked={locked} onTick={onTick} entry={entry} more={more} nothing={nothing} fill={fill} />
@@ -1099,6 +1140,12 @@ function Foot({ children }: { readonly children: ReactNode }) {
   return <div className="flex items-center gap-3 border-t border-hairline pt-2 text-caption text-ink-secondary">{children}</div>
 }
 
+/** What a tick's circle says: *Mark done* on an open row, *Undo: back to open* on a ticked one (`tickSaid`). */
+function tickSaying(t: Translate, done: Parameters<typeof tickSaid>[0], ticked: boolean): string {
+  const said = tickSaid(done)
+  return ticked ? t(said.undo.key, said.undo.parts) : t(said.mark.key, said.mark.parts)
+}
+
 /** A saved list: its first five open lines and *N more*, or two lines a group when it is grouped. */
 function ListBody({
   db,
@@ -1125,6 +1172,7 @@ function ListBody({
   readonly nothing: ReactNode
   readonly fill: boolean
 }) {
+  const t = useT()
   const picture = listPicture(db, declaration, declarations, query, viewSettings(db, declaration.name, 'list'), day)
   const done = picture.shape.done
   const all = picture.groups.flatMap((group) => group.rows)
@@ -1133,7 +1181,7 @@ function ListBody({
     <Line key={each.key} done={each.ticked}>
       {done !== undefined &&
         (locked || rowWriteRefusal(declaration) !== undefined ? (
-          <span className={`inline-flex size-4 flex-none items-center justify-center border-[1.5px] ${each.ticked ? 'border-ink bg-ink text-background' : 'border-ink-secondary'}`} role="img" aria-label={each.ticked ? 'Done' : 'Not done'}>
+          <span className={`inline-flex size-4 flex-none items-center justify-center border-[1.5px] ${each.ticked ? 'border-ink bg-ink text-background' : 'border-ink-secondary'}`} role="img" aria-label={t(each.ticked ? 'dashboards.body.done' : 'dashboards.body.notDone')}>
             {each.ticked && <ActionGlyph name="check" size={12} />}
           </span>
         ) : (
@@ -1141,8 +1189,8 @@ function ListBody({
             type="button"
             role="checkbox"
             aria-checked={each.ticked}
-            aria-label={`${each.ticked ? tickWords(done).undo : tickWords(done).mark}: ${each.title}`}
-            title={each.ticked ? tickWords(done).undo : tickWords(done).mark}
+            aria-label={`${tickSaying(t, done, each.ticked)}: ${each.title}`}
+            title={tickSaying(t, done, each.ticked)}
             onClick={() => onTick(declaration, each.row, done.column, tickValue(done, !each.ticked, each.ticked ? undefined : each.value))}
             className={`inline-flex size-4 flex-none items-center justify-center border-[1.5px] hover:border-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
               each.ticked ? 'border-ink bg-ink text-background' : 'border-ink-secondary'
@@ -1178,7 +1226,7 @@ function ListBody({
         {(rest > 0 || ticked > 0) && (
           <Foot>
             {more(rest)}
-            {ticked > 0 && <span>{ticked} done</span>}
+            {ticked > 0 && <span>{t('dashboards.body.doneCount', { count: ticked })}</span>}
           </Foot>
         )}
       </>
@@ -1423,6 +1471,7 @@ function AddMenu({
   /** *Add a block*, which the keyboard goes back to when Escape closes the menu. */
   readonly opener: RefObject<HTMLButtonElement | null>
 }) {
+  const t = useT()
   const box = useRef<HTMLDivElement>(null)
   const dismiss = useDismiss(true, box, onClose)
   const choosing = adding === undefined
@@ -1438,7 +1487,7 @@ function AddMenu({
     <div
       ref={box}
       role={choosing ? 'menu' : undefined}
-      aria-label={choosing ? 'Add a block' : undefined}
+      aria-label={choosing ? t('dashboards.addBlock') : undefined}
       onKeyDown={(event) => {
         if (event.key === 'Escape') {
           // A form inside lets Escape through to here: the menu closes, and the keyboard goes back to *Add a block*.
@@ -1468,79 +1517,79 @@ function AddMenu({
                   <Bidi>{each.format.title}</Bidi>
                 </Heading>
               )}
-              {each.saved.length > 0 && <Heading>Saved views</Heading>}
+              {each.saved.length > 0 && <Heading>{t('dashboards.menu.savedViews')}</Heading>}
               {each.saved.map((view) => (
                 <MenuItem
                   key={view.name}
                   disabled={on(each.format.name, view.name)}
                   check={on(each.format.name, view.name) ? <ActionGlyph name="check" size={12} /> : undefined}
-                  aside={view.kind === INPUT_KIND ? 'input view' : view.kind}
+                  aside={kindWord(t, view.kind)}
                   onClick={() => onAdd({ dashboard, format: each.format.name, kind: 'saved', name: view.name, address: '' })}
                 >
                   <Bidi>{view.name}</Bidi>
                 </MenuItem>
               ))}
-              {each.rollups.length > 0 && <Heading>Rollups</Heading>}
+              {each.rollups.length > 0 && <Heading>{t('dashboards.menu.rollups')}</Heading>}
               {each.rollups.map((name) => (
                 <MenuItem
                   key={name}
                   disabled={on(each.format.name, name)}
                   check={on(each.format.name, name) ? <ActionGlyph name="check" size={12} /> : undefined}
-                  aside="chart"
+                  aside={t('dashboards.menu.chart')}
                   onClick={() => onAdd({ dashboard, format: each.format.name, kind: 'rollup', name, address: '' })}
                 >
                   <Bidi>{rollupWords(name)}</Bidi>
                 </MenuItem>
               ))}
               {!document && each.saved.length === 0 && each.rollups.length === 0 && (
-                <p className="px-3 py-1.5 text-caption text-ink-secondary">No saved views or rollups yet.</p>
+                <p className="px-3 py-1.5 text-caption text-ink-secondary">{t('dashboards.menu.none')}</p>
               )}
             </div>
           ))}
           {offered.length > 0 && <Sep />}
           <MenuItem
             check={<ActionGlyph name="plus" size={12} />}
-            aside="a form that stays open"
+            aside={t('dashboards.menu.newInputAside')}
             disabled={writable.length === 0}
             onClick={() => {
               const first = writable[0]
               if (first !== undefined) onAdding(newInput(db, first))
             }}
           >
-            New input view
+            {t('dashboards.menu.newInput')}
           </MenuItem>
           <MenuItem
             check={<ActionGlyph name="plus" size={12} />}
-            aside="a list, table or board"
+            aside={t('dashboards.menu.newViewAside')}
             disabled={formats.length === 0}
             onClick={() => {
               const first = formats[0]
               if (first !== undefined) onAdding(newView(first))
             }}
           >
-            New view
+            {t('dashboards.menu.newView')}
           </MenuItem>
           <MenuItem
             check={<ActionGlyph name="plus" size={12} />}
-            aside="a count or a sum by month"
+            aside={t('dashboards.menu.newChartAside')}
             disabled={formats.length === 0}
             onClick={() => {
               const first = formats[0]
               if (first !== undefined) onAdding(newChart(first))
             }}
           >
-            New chart
+            {t('dashboards.menu.newChart')}
           </MenuItem>
           <MenuItem
             check={<ActionGlyph name="plus" size={12} />}
-            aside="a count or a sum"
+            aside={t('dashboards.menu.totalAside')}
             disabled={formats.length === 0}
             onClick={() => {
               const first = formats[0]
               if (first !== undefined) onAdding({ what: 'total', format: first.name, sum: undefined, ticked: [], name: '' })
             }}
           >
-            Headline total
+            {t('dashboards.menu.total')}
           </MenuItem>
         </>
       )}
@@ -1571,6 +1620,7 @@ function HeadlineForm({
   readonly onAdd: (block: DashboardBlock) => void
   readonly dashboard: string | undefined
 }) {
+  const t = useT()
   const declaration = formats.find((each) => each.name === adding.format) ?? formats[0]
   if (declaration === undefined) return null
   const conditions: readonly Condition[] = conditionsOf(db, declaration)
@@ -1591,18 +1641,18 @@ function HeadlineForm({
     const refusal = totalNameRefusal(name)
     if (refusal !== undefined) return onAdding({ ...adding, refused: refusal })
     if (blocks.some((each) => each.format === declaration.name && each.name === name)) {
-      return onAdding({ ...adding, refused: `A block here is called ${name} already.` })
+      return onAdding({ ...adding, refused: t('dashboards.make.taken', { name }) })
     }
     onAdd(block)
   }
   const radio = 'flex h-6 items-center gap-2 text-body'
   return (
     <>
-      <Heading>Headline total</Heading>
+      <Heading>{t('dashboards.menu.total')}</Heading>
       <div className="flex w-[340px] flex-col gap-2 px-3 pt-1 pb-3">
         {document && formats.length > 1 && (
           <div className="flex flex-col gap-1">
-            <span className="text-label">Of</span>
+            <span className="text-label">{t('dashboards.make.of')}</span>
             <div className="flex flex-wrap items-center gap-x-3">
               {formats.map((each) => (
                 <label key={each.name} className={radio}>
@@ -1620,10 +1670,10 @@ function HeadlineForm({
           </div>
         )}
         <div className="flex flex-col gap-1">
-          <span className="text-label">Figure</span>
+          <span className="text-label">{t('dashboards.make.figure')}</span>
           <label className={radio}>
             <input type="radio" name="headline-figure" className="accent-ink" checked={adding.sum === undefined} onChange={() => onAdding({ ...adding, sum: undefined })} />
-            Count of rows
+            {t('dashboards.make.countRows')}
           </label>
           {sums.map((column) => (
             <label key={column.name} className={radio}>
@@ -1634,13 +1684,13 @@ function HeadlineForm({
                 checked={adding.sum === column.name}
                 onChange={() => onAdding({ ...adding, sum: column.name })}
               />
-              Sum of {entryLabel(column)}
+              <Phrase text={t('dashboards.make.sumOf')} parts={{ column: <Bidi>{entryLabel(column)}</Bidi> }} />
             </label>
           ))}
         </div>
         {conditions.length > 0 && (
           <div className="flex flex-col gap-1">
-            <span className="text-label">Where</span>
+            <span className="text-label">{t('dashboards.make.where')}</span>
             {conditions.map((condition, at) => (
               <label key={condition.words} className={radio}>
                 <input
@@ -1660,13 +1710,13 @@ function HeadlineForm({
           </div>
         )}
         <div className="flex flex-col gap-1">
-          <span className="text-label">Name</span>
+          <span className="text-label">{t('dashboards.make.name')}</span>
           <input
             type="text"
-            aria-label="Name"
+            aria-label={t('dashboards.make.name')}
             autoFocus
             value={adding.name}
-            placeholder="What the figure is, e.g. Open"
+            placeholder={t('dashboards.make.totalPlaceholder')}
             onChange={(event) => {
               const { refused: _gone, ...rest } = adding
               onAdding({ ...rest, name: event.target.value })
@@ -1682,7 +1732,11 @@ function HeadlineForm({
             <>
               <Figure figure={preview.value.figure} unit={preview.value.unit} small />
               <span className="text-caption text-ink-secondary">
-                {ticked.length > 0 ? ticked.map((each) => each.words).join(', ') : `every ${declaration.title.toLowerCase()}`}
+                {ticked.length > 0 ? (
+                  <Bidi>{ticked.map((each) => each.words).join(', ')}</Bidi>
+                ) : (
+                  <Phrase text={t('dashboards.make.every')} parts={{ format: <Bidi>{declaration.title.toLowerCase()}</Bidi> }} />
+                )}
               </span>
             </>
           ) : (
@@ -1691,10 +1745,10 @@ function HeadlineForm({
         </div>
         <div className="flex items-center gap-2">
           <Button variant="primary" size="sm" icon="plus" onClick={submit}>
-            Add
+            {t('dashboards.make.add')}
           </Button>
           <Button variant="ghost" size="sm" onClick={() => onAdding(undefined)}>
-            Cancel
+            {t('dashboards.make.cancel')}
           </Button>
           {adding.refused !== undefined && (
             <span role="alert" className="text-caption text-negative">

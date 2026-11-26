@@ -10,6 +10,8 @@ import { entryLabel } from '@/domain/format/view.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ChoiceField, ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
+import { useT } from '@/i18n/current.ts'
 
 /**
  * **The mapper: a file's columns pointed at a format's keys** — M19 U5
@@ -48,6 +50,8 @@ export function Mapper({
   keys: readonly string[]
   onChange: (reading: Reading) => void
 }) {
+  const t = useT()
+  const dateOrders = DATE_ORDERS.map((each) => ({ value: each.value, label: t(each.key) }))
   const bound = new Map(reading.columns.map((each) => [each.index, each.key]))
   const preview = table.rows.slice(reading.headerRow + 1, reading.headerRow + 7)
   const indexes = Array.from({ length: table.columnCount }, (_, index) => index)
@@ -62,7 +66,10 @@ export function Mapper({
     const said = cells.join(', ')
     return {
       value: String(index),
-      label: cells.length === 0 ? `Row ${String(index + 1)}, empty` : `Row ${String(index + 1)}: ${said.length > 60 ? `${said.slice(0, 59)}…` : said}`,
+      label:
+        cells.length === 0
+          ? t('formats.intake.rowEmpty', { row: index + 1 })
+          : t('formats.intake.rowCells', { row: index + 1, cells: said.length > 60 ? `${said.slice(0, 59)}…` : said }),
     }
   })
   // A column holding several of a list is split by what the person states
@@ -95,7 +102,7 @@ export function Mapper({
     <div className="mb-4">
       <div className="mb-2 flex flex-wrap items-center gap-4 text-caption">
         <label className="flex items-center gap-2">
-          <span className="text-ink-secondary">Header row</span>
+          <span className="text-ink-secondary">{t('formats.intake.headerRow')}</span>
           <ChoiceMenu
             text={headerRows[reading.headerRow]?.label ?? ''}
             choices={headerRows}
@@ -103,10 +110,10 @@ export function Mapper({
           />
         </label>
         <label className="flex items-center gap-2">
-          <span className="text-ink-secondary">Dates are</span>
+          <span className="text-ink-secondary">{t('formats.intake.datesAre')}</span>
           <ChoiceMenu
-            text={DATE_ORDERS.find((each) => each.value === reading.dateOrder)?.label ?? ''}
-            choices={DATE_ORDERS}
+            text={dateOrders.find((each) => each.value === reading.dateOrder)?.label ?? ''}
+            choices={dateOrders}
             onPick={(choice) => onChange({ ...reading, dateOrder: choice.value as DateOrder })}
           />
         </label>
@@ -127,20 +134,20 @@ export function Mapper({
                         fill that way says so under the grid. */}
                     <ChoiceMenu
                       className={`${ROLE} ${key === undefined ? 'text-ink-secondary' : 'text-ink'}`}
-                      aria-label={`What column ${String(index + 1)} is read into`}
-                      text={key === undefined ? 'Ignore' : capitalize(keyWords(declaration, key))}
+                      aria-label={t('formats.intake.readInto', { index: index + 1 })}
+                      text={key === undefined ? t('formats.intake.ignore') : capitalize(keyWords(declaration, key))}
                       choices={[
-                        { value: '', label: 'Ignore' },
+                        { value: '', label: t('formats.intake.ignore') },
                         ...keys.map((each) => ({ value: each, label: capitalize(keyWords(declaration, each)) })),
                       ]}
                       onPick={(choice) => set(index, choice.value)}
                     />
                     {listKeys.has(key ?? '') && (
                       <label className="fc-pop-enter mt-1 flex items-center gap-1 px-1 text-ink-secondary">
-                        <span className="shrink-0">Split by</span>
+                        <span className="shrink-0">{t('formats.intake.splitBy')}</span>
                         <input
                           className={`${FIELD} w-12`}
-                          aria-label={`What splits a cell of ${keyWords(declaration, key ?? '')}`}
+                          aria-label={t('formats.intake.splits', { key: keyWords(declaration, key ?? '') })}
                           placeholder=","
                           value={separatorAt(index) ?? ''}
                           onChange={(event) => split(index, event.target.value)}
@@ -199,6 +206,7 @@ export function Fixed({
   reading: Reading
   onChange: (reading: Reading) => void
 }) {
+  const t = useT()
   const bound = new Set(reading.columns.map((each) => each.key))
   const fixed = new Map(reading.fixed.map((each) => [each.key, each.value]))
 
@@ -222,9 +230,11 @@ export function Fixed({
       {wanted.map(({ column, key }) => (
         <label key={key} className="flex flex-wrap items-center gap-2 text-caption">
           <span className="text-ink-secondary">
-            {column.type === 'link'
-              ? `Every row belongs to which ${(declared.find((each) => each.name === column.target)?.title ?? 'row').toLowerCase()}?`
-              : `Every ${entryLabel(column)} is in`}
+            {column.type === 'link' ? (
+              <LinkQuestion title={declared.find((each) => each.name === column.target)?.title} />
+            ) : (
+              <Phrase text={t('formats.intake.isIn')} parts={{ column: <Bidi>{entryLabel(column)}</Bidi> }} />
+            )}
           </span>
           {column.type === 'link' ? (
             <RowChoice
@@ -239,7 +249,7 @@ export function Fixed({
               className={`${FIELD} w-28`}
               aria-label={capitalize(keyWords(declaration, key))}
               value={fixed.get(key) ?? ''}
-              placeholder={column.type === 'money' ? 'Three letters' : 'A unit'}
+              placeholder={column.type === 'money' ? t('formats.intake.threeLetters') : t('formats.intake.aUnit')}
               onChange={(event) => set(key, event.target.value)}
             />
           )}
@@ -301,11 +311,19 @@ export function keysInWords(sentence: string, declaration: FormatDeclaration): s
   return sentence.replace(/\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b/g, (word) => (keys.has(word) ? keyWords(declaration, word) : word))
 }
 
+/** The orders a file's dates may be in, each by its words' key. */
 const DATE_ORDERS = [
-  { value: 'dmy', label: 'day / month / year' },
-  { value: 'mdy', label: 'month / day / year' },
-  { value: 'ymd', label: 'year / month / day' },
-]
+  { value: 'dmy', key: 'formats.intake.dmy' },
+  { value: 'mdy', key: 'formats.intake.mdy' },
+  { value: 'ymd', key: 'formats.intake.ymd' },
+] as const
+
+/** *Every row belongs to which recipe?* — the format a link points at, by its title, or *row* when it has none. */
+function LinkQuestion({ title }: { title: string | undefined }) {
+  const t = useT()
+  if (title === undefined) return <>{t('formats.intake.belongsToRow')}</>
+  return <Phrase text={t('formats.intake.belongsTo')} parts={{ title: <Bidi>{title.toLowerCase()}</Bidi> }} />
+}
 
 /**
  * The row every read row belongs to: an autocomplete, since a format can hold
@@ -321,14 +339,15 @@ function RowChoice({
   id: string
   onPick: (id: string) => void
 }) {
+  const t = useT()
   const [typed, setTyped] = useState<string | undefined>()
-  const chosen = id === '' ? 'Not set' : (rows.find((row) => row.id === id)?.label ?? '')
+  const chosen = id === '' ? t('formats.intake.notSet') : (rows.find((row) => row.id === id)?.label ?? '')
   return (
     <ChoiceField
       className={`${FIELD} w-56`}
       filter
       text={typed ?? chosen}
-      choices={[{ value: '', label: 'Not set' }, ...rows.map((row) => ({ value: row.id, label: row.label }))]}
+      choices={[{ value: '', label: t('formats.intake.notSet') }, ...rows.map((row) => ({ value: row.id, label: row.label }))]}
       onText={setTyped}
       onPick={(choice) => {
         setTyped(undefined)

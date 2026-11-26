@@ -11,7 +11,7 @@ import { cellText } from '@/ui/formats/EntryView.tsx'
 import type { ColumnChoice } from '@/ui/formats/addressFilter.ts'
 import { ColumnsChoice } from '@/ui/formats/ColumnsChoice.tsx'
 import { Conversation, selects } from '@/ui/formats/conversation.ts'
-import { cardChoosable, chosenCards } from '@/ui/formats/lineColumns.ts'
+import { cardChoosable, chosenCards, namedByRow } from '@/ui/formats/lineColumns.ts'
 import { memberText, toneOf } from '@/ui/formats/tone.ts'
 import { Flip } from '@/ui/motion/Flip.tsx'
 import { arrowStep } from '@/ui/direction.ts'
@@ -87,7 +87,8 @@ export function BoardView({
   onColumns?: ((next: ColumnChoice) => void) | undefined
 }) {
   const t = useT()
-  const cards = format === undefined ? board.cards : chosenCards(format, board, columns[format.name])
+  const chose = format === undefined ? undefined : columns[format.name]
+  const cards = format === undefined ? board.cards : chosenCards(format, board, chose)
   const [moved, setMoved] = useState<Moved | undefined>(undefined)
   const conversation = useContext(Conversation)
   const selection = format === undefined ? undefined : conversation.selection
@@ -107,7 +108,7 @@ export function BoardView({
 
   // Keyed by what a card is called, never its id: a text document renews ids
   // on every write (D-247), and a card keyed by one would land again each save.
-  const keys = uniqueCardKeys(rows.map((row) => (board.name === undefined ? row.id : cardText(board.name, row, labels))))
+  const keys = uniqueCardKeys(rows.map((row) => (board.name === undefined ? row.id : cardText(board.name, row, labels, t))))
   const keyOf = new Map(rows.map((row, index) => [row.id, keys[index] ?? row.id]))
   /**
    * **A move is made at once, with an Undo beside it** (M64 U14, D-626, after
@@ -119,7 +120,7 @@ export function BoardView({
     const from = memberOf(board.lanes, row)
     const key = keyOf.get(row.id) ?? row.id
     onMove(row, member)
-    setMoved(from === undefined ? undefined : { key, name: board.name === undefined ? row.id : cardText(board.name, row, labels), from, to: member })
+    setMoved(from === undefined ? undefined : { key, name: board.name === undefined ? row.id : cardText(board.name, row, labels, t), from, to: member })
   }
   const undoMove = (): void => {
     if (moved === undefined) return
@@ -148,15 +149,15 @@ export function BoardView({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-hairline px-6 py-2 text-caption text-ink-secondary">
+      <div className={VIEW_STRIP}>
         {enums.length > 1 ? (
           <label className="flex items-center gap-2">
-            Lanes by
+            {t('views.board.lanesBy')}
             <ChoiceField
               className={`${FIELD} w-40`}
               readOnly
               filter={false}
-              aria-label="Lanes by"
+              aria-label={t('views.board.lanesBy')}
               text={entryLabel(board.lanes)}
               choices={enums.map((each) => ({ value: each.name, label: entryLabel(each) }))}
               onText={() => undefined}
@@ -165,13 +166,11 @@ export function BoardView({
           </label>
         ) : (
           <span>
-            Lanes by <Bidi>{entryLabel(board.lanes)}</Bidi>
+            <Phrase text={t('views.board.lanesByColumn')} parts={{ column: <Bidi>{entryLabel(board.lanes)}</Bidi> }} />
           </span>
         )}
         {capped !== undefined && (
-          <span className="tabular-nums">
-            Showing {String(rows.length)} of {String(capped)}; search narrows it.
-          </span>
+          <span className="tabular-nums">{t('views.board.showing', { shown: rows.length, total: capped })}</span>
         )}
         {refusal !== undefined ? (
           <span className="text-negative" role="status">
@@ -199,7 +198,7 @@ export function BoardView({
         as="div"
         className="flex min-h-0 flex-1 gap-4 overflow-x-auto px-6 py-6"
         role="list"
-        aria-label="Lanes"
+        aria-label={t('views.board.lanes')}
         // Which card is in which lane, in order: a move, an arrival or a card
         // gone changes it, and the cards glide (M39, src/ui/motion/).
         flipKey={lanes.map((lane) => `${lane.member ?? ''}:${lane.rows.map((row) => keyOf.get(row.id) ?? row.id).join(',')}`).join('|')}
@@ -210,7 +209,7 @@ export function BoardView({
             <section
               key={key}
               role="listitem"
-              aria-label={lane.member ?? 'No value'}
+              aria-label={lane.member ?? t('views.board.noValue')}
               className={`flex min-w-[200px] flex-1 basis-0 flex-col gap-2 bg-surface p-3 ${
                 over === key && lane.member !== undefined ? 'outline outline-2 -outline-offset-2 outline-accent' : ''
               }`}
@@ -227,25 +226,33 @@ export function BoardView({
             >
               <header className="flex items-center gap-2 px-1 pt-1 pb-2">
                 <span className="fc-dot" data-tone={toneOf(lane.member)} aria-hidden />
-                <span className="fc-label text-ink">{lane.member === undefined ? 'No value' : memberText(lane.member)}</span>
+                <span className="fc-label text-ink">{lane.member === undefined ? t('views.board.noValue') : memberText(lane.member)}</span>
                 <span className="ms-auto font-mono text-caption text-ink-secondary tabular-nums">
                   {String(lane.rows.length)}
                 </span>
               </header>
               {lane.rows.length === 0 ? (
                 <div className="border border-dashed border-hairline-strong px-3 py-4 text-center text-caption text-ink-secondary">
-                  Nothing {lane.member === undefined ? '' : memberText(lane.member)}
+                  {lane.member === undefined ? (
+                    t('views.board.emptyNone')
+                  ) : (
+                    <Phrase text={t('views.board.emptyLane')} parts={{ member: <Bidi>{memberText(lane.member)}</Bidi> }} />
+                  )}
                 </div>
               ) : (
                 <ol className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
                   {lane.rows.map((row) => {
                     const cardKey = keyOf.get(row.id) ?? row.id
-                    const name = board.name === undefined ? row.id : cardText(board.name, row, labels)
+                    const name = board.name === undefined ? row.id : cardText(board.name, row, labels, t)
                     // A link is a chip and text is the title: the first card column that
                     // is not a link, so a unit's `title` heads it and its milestone does not.
                     const title = cards.find((column) => column.type !== 'link' && column.type !== 'links')
-                    const rest = cards.filter((column) => column !== title)
-                    const titleText = title === undefined ? '' : cardText(title, row, labels)
+                    // A link the card's name already says (its milestone under its ref) is
+                    // left out unless it was chosen under Columns (M64 F19, D-632).
+                    const rest = cards.filter(
+                      (column) => column !== title && (chose !== undefined || !namedByRow(column, cardText(column, row, labels, t), name)),
+                    )
+                    const titleText = title === undefined ? '' : cardText(title, row, labels, t)
                     return (
                       <li key={cardKey} data-motion-key={cardKey}>
                         {/* **A board card is one link** (M54 F2, D-531, A card is one link):
@@ -302,7 +309,7 @@ export function BoardView({
                           {rest.length > 0 && (
                             <div className="flex flex-wrap items-center gap-2">
                               {rest.map((column) => {
-                                const text = cardText(column, row, labels)
+                                const text = cardText(column, row, labels, t)
                                 if (text === '') return null
                                 return text.length <= 24 ? (
                                   <span key={column.name} className="fc-state">
@@ -342,12 +349,17 @@ function MoveButton({
   to: string | undefined
   onMove: (member: string) => void
 }) {
+  const t = useT()
   return (
     <button
       type="button"
       className="inline-flex size-7 items-center justify-center border border-transparent text-ink-secondary transition-colors hover:border-hairline-strong hover:text-ink disabled:cursor-default disabled:opacity-30"
       disabled={to === undefined}
-      aria-label={to === undefined ? `Move ${name} ${side}` : `Move ${name} to ${memberText(to)}`}
+      aria-label={
+        to === undefined
+          ? t(side === 'left' ? 'views.board.moveLeft' : 'views.board.moveRight', { name })
+          : t('views.board.moveTo', { name, member: memberText(to) })
+      }
       onClick={() => {
         if (to !== undefined) onMove(to)
       }}
@@ -373,12 +385,21 @@ function memberOf(column: ColumnDeclaration, row: StoredRow): string | undefined
   return typeof value === 'string' && value !== '' ? value : undefined
 }
 
-/** A cell as a card prints it: a link by what it names, as the sheet does. */
-export function cardText(column: ColumnDeclaration, row: StoredRow, labels: ReadonlyMap<string, string>): string {
+/**
+ * **The views' one strip of controls** (M64 F17, D-632): under the tab strip,
+ * the board's *Lanes by* and *Columns*, the roadmap's filters for what it folds,
+ * *In the order of*, *Columns* and *Fold all*, and the ready list's *Columns* —
+ * one row of the same classes on all three, so switching views moves nothing.
+ */
+export const VIEW_STRIP =
+  'flex min-h-10 shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-hairline px-6 py-1 text-caption text-ink-secondary'
+
+/** A cell as a card prints it: a link by what it names, as the sheet does; a yes or a no in the language now. */
+export function cardText(column: ColumnDeclaration, row: StoredRow, labels: ReadonlyMap<string, string>, t: Translate): string {
   const value = readValue(column, row)
   if (column.type === 'link' && typeof value === 'string') return labels.get(value) ?? value
   if (Array.isArray(value)) return value.map((id: string) => labels.get(id) ?? id).join(', ')
-  return cellText(value)
+  return cellText(value, t)
 }
 
 /** **Where each thing stands**, the board's answer (M64 U14, D-626): how many cards in each lane. */
