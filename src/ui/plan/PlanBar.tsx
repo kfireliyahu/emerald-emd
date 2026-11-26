@@ -616,7 +616,9 @@ export function PlanBar({
             >
               <Fill amount={share} got={billsGot} colour="var(--color-ink-tertiary)" />
               {share.minor / total > 0.07 && <b className="relative truncate font-medium">{say('plan.fixed.title')}</b>}
-              {share.minor / total > 0.05 && <span className="relative truncate tabular-nums text-ink-secondary rtl:text-right">{formatMoney(share)}</span>}
+              {share.minor / total > 0.05 && <span className="relative truncate text-ink-secondary">
+                  <span className="tabular-nums">{formatMoney(share)}</span>
+                </span>}
             </div>
           )}
 
@@ -644,8 +646,9 @@ export function PlanBar({
                   </b>
                 )}
                 {entry.amount.minor / total > 0.05 && (
-                  <span className="relative truncate tabular-nums text-ink-secondary rtl:text-right">
-                    {wholeMoney(entry.amount)}
+                  // The figure is its own inline run, so the line keeps the page's start: under the name in Hebrew too.
+                  <span className="relative truncate text-ink-secondary">
+                    <span className="tabular-nums">{wholeMoney(entry.amount)}</span>
                   </span>
                 )}
               </div>
@@ -659,7 +662,9 @@ export function PlanBar({
               title={`${say('plan.bar.free')} · ${formatMoney(money(free, currency))}`}
             >
               {free / total > 0.08 && <b className="truncate font-medium">{say('plan.bar.free')}</b>}
-              {free / total > 0.05 && <span className="truncate tabular-nums rtl:text-right">{formatMoney(money(free, currency))}</span>}
+              {free / total > 0.05 && <span className="truncate">
+                  <span className="tabular-nums">{formatMoney(money(free, currency))}</span>
+                </span>}
             </div>
           )}
 
