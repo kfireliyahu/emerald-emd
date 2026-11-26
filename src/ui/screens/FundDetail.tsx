@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 
-import { abs, formatMoney } from '@/core/money.ts'
+import { abs, formatMoney, type Money } from '@/core/money.ts'
 import { formatPercent } from '@/core/percent.ts'
 import { monthsBetween, toISODate, toYearMonthString, yearMonthOf } from '@/core/time.ts'
 import { DEFAULT_FEE_REFERENCES } from '@/data/reference/fundFeeReference.ts'
@@ -32,6 +32,9 @@ import { Bidi } from '@/ui/Bidi.tsx'
 import { READ_GLYPH } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { Chip } from '@/ui/components/Chip.tsx'
+import { ContextMenu, type MenuItem } from '@/ui/components/ContextMenu.tsx'
+import { MoreButton } from '@/ui/wealth/rowMenu.tsx'
+import { wholeMoney } from '@/ui/charts/kit.ts'
 import { BalanceChart } from '@/ui/funds/BalanceChart.tsx'
 import { ReportIntake } from '@/ui/funds/ReportIntake.tsx'
 import { blankSnapshot, SnapshotForm } from '@/ui/funds/SnapshotEditor.tsx'
@@ -77,6 +80,7 @@ export function FundDetail() {
   const held = useDocumentRead()
   const showReader = reading || (held?.kind === 'report' && held.open)
   const [problem, setProblem] = useState<string | undefined>()
+  const [menu, setMenu] = useState<{ readonly at: { x: number; y: number }; readonly title: string; readonly items: readonly MenuItem[] } | undefined>()
 
   const analysis = useMemo(
     () => (db === undefined || fundId === undefined ? undefined : fundAnalysis(db, fundId)),
@@ -196,6 +200,20 @@ export function FundDetail() {
   const liquidity = studyFundLiquidity(fund)
   const split = latest === undefined ? undefined : componentSplit(latest)
   const annualCost = latest === undefined ? undefined : annualFeeCost(latest.totalBalance, fund.fees)
+  // What the document says about the policy, kept as written (and isolated: it may be Hebrew).
+  const about = [fund.employerName, fund.investmentTrack, fund.policyNumber]
+    .filter((value) => value !== undefined && value !== '')
+    .join(' · ')
+  const severance =
+    split === undefined || split.severance.minor === 0 ? undefined : (
+      <Figure label={t('wealth.fundDetail.severance')} hint={t('wealth.fundDetail.severanceHint')}>
+        <span className="text-heading font-medium text-ink-secondary tabular-nums">{formatMoney(split.severance)}</span>
+      </Figure>
+    )
+  // A table of dashes says nothing (M64 F60): a table is drawn when one of its rows
+  // has both sides to compare, and otherwise it collapses to the note that says so.
+  const monthsCheckable = months.some((month) => month.expected !== undefined && month.received !== undefined)
+  const periodsCheckable = periods.some((period) => hasPayslips(period) && period.reported !== undefined)
 
   return (
     <>
@@ -238,35 +256,25 @@ export function FundDetail() {
       )}
 
       <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
-        <div className="flex flex-wrap items-end gap-x-10 gap-y-4">
-          <Figure
-            label={t('wealth.fundDetail.balance')}
-            hint={latest === undefined ? t('wealth.fundDetail.noReading') : t('wealth.fundDetail.asOf', { date: toISODate(latest.asOfDate) })}
-          >
-            <span className="text-hero tabular-nums">
-              {latest === undefined ? '—' : formatMoney(latest.totalBalance)}
-            </span>
-          </Figure>
-
-          {split !== undefined && split.severance.minor !== 0 && (
-            <Figure label={t('wealth.fundDetail.severance')} hint={t('wealth.fundDetail.severanceHint')}>
-              <span className="text-heading font-medium text-ink-secondary tabular-nums">
-                {formatMoney(split.severance)}
-              </span>
-            </Figure>
+        {/* The answer first, in words (M64 F60): what it is worth, whether its
+            deposits arrived, what its fee costs — each part then has its section. */}
+        <p className="m-0 max-w-[40ch] text-lede [text-wrap:balance]" data-answer="fund">
+          <FundAnswer
+            name={fund.name}
+            latest={latest}
+            reconciliation={reconciliation}
+            annualCost={annualCost}
+          />
+        </p>
+        <p className="m-0 mt-2 text-caption text-ink-secondary">
+          {t(`wealth.kinds.fund.${fund.fundType}`)} · {t(`wealth.kinds.fundStatus.${fund.status}`)}
+          {about !== '' && (
+            <>
+              {' · '}
+              <Bidi>{about}</Bidi>
+            </>
           )}
-
-          <Figure
-            label={t(`wealth.kinds.fund.${fund.fundType}`)}
-            hint={[fund.employerName, fund.investmentTrack, fund.policyNumber]
-              .filter((value) => value !== undefined)
-              .join(' · ')}
-          >
-            <span className="text-heading font-medium text-ink-secondary">
-              {t(`wealth.kinds.fundStatus.${fund.status}`)}
-            </span>
-          </Figure>
-        </div>
+        </p>
 
         <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1">
           {agreement.kind === 'LAPSED' && (
@@ -300,7 +308,7 @@ export function FundDetail() {
               <BalanceChart snapshots={snapshots} periods={returns.periods} />
 
               {returns.cumulative !== undefined && (
-                <div className="mt-4 flex flex-wrap items-end gap-x-10 gap-y-4">
+                <div className="mt-4 grid grid-cols-3 items-start gap-x-6 gap-y-4">
                   <Figure label={t('wealth.fundDetail.paidIn')} hint={trackedSpan(snapshots, t)}>
                     <span className="text-heading font-medium tabular-nums">
                       {formatMoney(returns.cumulative.contributions)}
@@ -320,6 +328,7 @@ export function FundDetail() {
                       {formatPercent(returns.cumulative.basisPoints)}
                     </span>
                   </Figure>
+                  {severance}
                 </div>
               )}
 
@@ -347,6 +356,10 @@ export function FundDetail() {
                 </p>
               )}
             </>
+          )}
+          {/* Severance sits beside the totals when there are any, and on its own otherwise. */}
+          {(returns.kind === 'NEEDS_TWO_POINTS' || returns.cumulative === undefined) && severance !== undefined && (
+            <div className="mt-4">{severance}</div>
           )}
         </Section>
 
@@ -399,12 +412,15 @@ export function FundDetail() {
             </p>
           )}
 
-          {months.length > 0 && <MonthTable months={months} />}
-          {periods.length > 0 && <PeriodTable periods={periods} />}
+          {monthsCheckable && <MonthTable months={months} />}
+          {periodsCheckable && <PeriodTable periods={periods} />}
+          {(months.length > 0 || periods.length > 0) && !monthsCheckable && !periodsCheckable && (
+            <p className="mt-3 max-w-2xl text-caption text-ink-secondary">{t('wealth.fundDetail.nothingToCheck')}</p>
+          )}
         </Section>
 
         <Section title={t('wealth.fundDetail.fee.title')}>
-          <div className="flex flex-wrap items-end gap-x-10 gap-y-4">
+          <div className="grid grid-cols-2 items-start gap-x-6 gap-y-4">
             <Figure label={t('wealth.fundDetail.fee.stated')} hint={t('wealth.fundDetail.fee.statedHint')}>
               <span className="text-heading font-medium tabular-nums">
                 {fund.fees.onAccumulationBasisPoints === undefined
@@ -462,51 +478,59 @@ export function FundDetail() {
             <table className="w-full max-w-3xl">
               <thead>
                 <tr className="border-b border-hairline text-caption font-medium text-ink-secondary uppercase">
-                  <th className="py-2 pe-6 text-start font-medium">{t('wealth.fundDetail.readings.asOf')}</th>
-                  <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.readings.balance')}</th>
-                  <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.readings.deposits')}</th>
-                  <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.readings.fees')}</th>
-                  <th className="py-2 pe-6 text-start font-medium">{t('wealth.fundDetail.readings.note')}</th>
-                  <th className="py-2" />
+                  <th className="py-2 pe-3 text-start font-medium">{t('wealth.fundDetail.readings.asOf')}</th>
+                  <th className="py-2 pe-3 text-end font-medium">{t('wealth.fundDetail.readings.balance')}</th>
+                  <th className="py-2 pe-3 text-end font-medium">{t('wealth.fundDetail.readings.deposits')}</th>
+                  <th className="w-7 py-2">
+                    <span className="sr-only">{t('wealth.fundDetail.readings.actions')}</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {[...snapshots].reverse().map((snapshot) => (
                   <tr key={snapshot.id} className="border-b border-hairline">
-                    <td className="py-1.5 pe-6 whitespace-nowrap tabular-nums">
-                      {toISODate(snapshot.asOfDate)}
+                    {/* Four columns, so every figure fits the detail's width (M64 F59):
+                        the note stacks under its date, the fees under the deposits, and
+                        Edit and Delete are the row's one menu. */}
+                    <td className="py-1.5 pe-3 align-top">
+                      <span className="block whitespace-nowrap tabular-nums">{toISODate(snapshot.asOfDate)}</span>
+                      {snapshot.note !== undefined && (
+                        <span className="block text-caption text-ink-secondary">
+                          <Bidi>{snapshot.note}</Bidi>
+                        </span>
+                      )}
                     </td>
-                    <td className="py-1.5 pe-6 text-end tabular-nums">
+                    <td className="py-1.5 pe-3 text-end align-top whitespace-nowrap tabular-nums">
                       {formatMoney(snapshot.totalBalance)}
                     </td>
-                    <td className="py-1.5 pe-6 text-end text-ink-secondary tabular-nums">
+                    <td className="py-1.5 pe-3 text-end align-top whitespace-nowrap tabular-nums">
                       {snapshot.depositsSincePrevious === undefined
                         ? '—'
                         : formatMoney(snapshot.depositsSincePrevious)}
+                      {snapshot.feesChargedSincePrevious !== undefined && (
+                        <span className="block text-caption text-ink-secondary">
+                          {t('wealth.fundDetail.readings.feesLine', { amount: formatMoney(snapshot.feesChargedSincePrevious) })}
+                        </span>
+                      )}
                     </td>
-                    <td className="py-1.5 pe-6 text-end text-ink-secondary tabular-nums">
-                      {snapshot.feesChargedSincePrevious === undefined
-                        ? '—'
-                        : formatMoney(snapshot.feesChargedSincePrevious)}
-                    </td>
-                    <td className="py-1.5 pe-6 text-caption text-ink-secondary">
-                      {snapshot.note === undefined ? '' : <Bidi>{snapshot.note}</Bidi>}
-                    </td>
-                    <td className="py-1.5 text-end">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setEditing({ isNew: false, snapshot })}
-                      >
-                        {t('wealth.common.edit')}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => write((database, at) => deleteSnapshot(database, snapshot.id, at))}
-                      >
-                        {t('wealth.common.delete')}
-                      </Button>
+                    <td className="py-1 text-end align-top">
+                      <MoreButton
+                        label={t('wealth.common.moreFor', { name: toISODate(snapshot.asOfDate) })}
+                        onMenu={(at) =>
+                          setMenu({
+                            at,
+                            title: toISODate(snapshot.asOfDate),
+                            items: [
+                              { label: t('wealth.common.edit'), icon: 'edit', onChoose: () => setEditing({ isNew: false, snapshot }) },
+                              {
+                                label: t('wealth.common.delete'),
+                                icon: 'trash',
+                                onChoose: () => write((database, at) => deleteSnapshot(database, snapshot.id, at)),
+                              },
+                            ],
+                          })
+                        }
+                      />
                     </td>
                   </tr>
                 ))}
@@ -516,6 +540,9 @@ export function FundDetail() {
         </Section>
       </div>
     </div>
+    {menu !== undefined && (
+      <ContextMenu key={menu.title} at={menu.at} items={menu.items} onClose={() => setMenu(undefined)} header={{ title: menu.title }} />
+    )}
     </>
   )
 }
@@ -616,7 +643,6 @@ function Verdict({
       </p>
       <p className="mt-1 text-caption text-ink-secondary">
         {t(countKey('wealth.fundDetail.verdict.how', expected.paycheckCount), {
-          status: t(`wealth.kinds.deposit.${status}`),
           count: expected.paycheckCount,
           lag: window.lagMonths,
           tolerance: formatMoney(reconciliation.tolerance),
@@ -643,58 +669,67 @@ function hasPayslips(
  * exist, seeing the sharp one first and the always-available one under it is
  * what makes the two agreeing meaningful.
  *
- * **The lag is measured here and it is a column.** A contribution for 11/2025
- * that arrived on 04/01/2026 is two months late, which no cumulative window can
- * say — and being able to see *which* months are late is most of what somebody
- * chasing an employer needs.
+ * **The lag is measured here and it is said under the month.** A contribution
+ * for 11/2025 that arrived on 04/01/2026 is two months late, which no cumulative
+ * window can say — and being able to see *which* months are late is most of what
+ * somebody chasing an employer needs.
+ *
+ * **Four columns, so every figure fits the detail's column** (M64 F59): how late
+ * a month's deposit was, and the day it arrived, stack under the month; the base
+ * it was computed on stacks under its difference, and only where the two
+ * documents disagree on it (BaseNote says the rest once).
  */
 function MonthTable({ months }: { months: readonly MonthlyDeposit[] }) {
   const t = useT()
   const dates = useDates()
   return (
-    <div className="mt-4 max-w-3xl overflow-x-auto">
+    <div className="mt-4 max-w-3xl">
       <p className="text-caption font-medium text-ink-secondary uppercase">{t('wealth.fundDetail.months.title')}</p>
       <table className="mt-2 w-full">
         <thead>
           <tr className="border-b border-hairline text-caption font-medium text-ink-secondary uppercase">
-            <th className="py-2 pe-6 text-start font-medium">{t('wealth.fundDetail.months.salaryMonth')}</th>
-            <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.months.paycheckSays')}</th>
-            <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.months.fundReceived')}</th>
-            <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.months.difference')}</th>
-            {/* The base the two documents each say the deposit was worked out
-                on (D-169) — the payslip's `basisAmount` against the fund's own
-                salary column, and neither of them is the gross. */}
-            <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.months.computedOn')}</th>
-            <th className="py-2 pe-6 text-start font-medium">{t('wealth.fundDetail.months.arrived')}</th>
-            <th className="py-2 text-start font-medium">{t('wealth.fundDetail.months.lateBy')}</th>
+            <th className="py-2 pe-3 text-start font-medium">{t('wealth.fundDetail.months.salaryMonth')}</th>
+            <th className="py-2 pe-3 text-end font-medium">{t('wealth.fundDetail.months.paycheckSays')}</th>
+            <th className="py-2 pe-3 text-end font-medium">{t('wealth.fundDetail.months.fundReceived')}</th>
+            <th className="py-2 text-end font-medium">{t('wealth.fundDetail.months.difference')}</th>
           </tr>
         </thead>
         <tbody>
           {[...months].reverse().map((month) => (
             <tr key={toYearMonthString(month.period)} className="border-b border-hairline">
-              <td className="py-1.5 pe-6 whitespace-nowrap tabular-nums">
-                {dates.monthShort(month.period)}
+              <td className="py-1.5 pe-3 align-top">
+                <span className="block whitespace-nowrap tabular-nums">{dates.monthShort(month.period)}</span>
+                <span className="block text-caption text-ink-secondary">
+                  {month.lagMonths === undefined
+                    ? monthStatusHint(month.status, t)
+                    : month.lagMonths <= 1
+                      ? t('wealth.fundDetail.months.onTime')
+                      : t(countKey('wealth.fundDetail.months.late', month.lagMonths), { count: month.lagMonths })}
+                </span>
+                {month.arrivedOn !== undefined && (
+                  <span className="block text-caption whitespace-nowrap text-ink-secondary tabular-nums">
+                    {t('wealth.fundDetail.months.arrivedOn', { date: dates.dayMonth(month.arrivedOn) })}
+                  </span>
+                )}
               </td>
               {/* An em dash, never a zero: a month with no payslip has nothing
                   to say about what was due, and a month the reports do not
                   mention is not a month nothing arrived in — it may simply be
                   outside every report this document holds. */}
-              <td className="py-1.5 pe-6 text-end tabular-nums">
+              <td className="py-1.5 pe-3 text-end align-top whitespace-nowrap tabular-nums">
                 {month.expected === undefined ? '—' : formatMoney(month.expected)}
               </td>
-              <td className="py-1.5 pe-6 text-end tabular-nums">
+              <td className="py-1.5 pe-3 text-end align-top whitespace-nowrap tabular-nums">
                 {month.received === undefined ? '—' : formatMoney(month.received)}
               </td>
-              <td
-                className={`py-1.5 pe-6 text-end tabular-nums ${
-                  month.status === 'MISSING' ? 'text-negative' : ''
-                }`}
-              >
-                {month.gap === undefined ? '—' : formatMoney(month.gap)}
+              <td className="py-1.5 text-end align-top tabular-nums">
+                <span className={`whitespace-nowrap ${month.status === 'MISSING' ? 'text-negative' : ''}`}>
+                  {month.gap === undefined ? '—' : formatMoney(month.gap)}
+                </span>
                 {/* A part the slips put in and the rows show none of fails by
                     name, whatever the total says (D-389). */}
                 {month.missingParts.length > 0 && (
-                  <span className="block text-caption whitespace-nowrap">
+                  <span className="block text-caption text-negative">
                     {t('wealth.fundDetail.months.noPart', {
                       parts: month.missingParts
                         .map((part) => t(`wealth.kinds.depositPart.${part}`))
@@ -702,34 +737,21 @@ function MonthTable({ months }: { months: readonly MonthlyDeposit[] }) {
                     })}
                   </span>
                 )}
-              </td>
-              <td className="py-1.5 pe-6 text-end tabular-nums">
-                {month.fundSalary === undefined || month.slipSalary === undefined ? (
-                  <span className="text-ink-secondary">—</span>
-                ) : month.salaryStatus === 'AGREES' ? (
-                  <span className="text-ink-secondary">{formatMoney(month.fundSalary)}</span>
-                ) : (
-                  // Both figures, because the interesting fact is the pair. The
-                  // fund's is the one marked: it is the number the deposit was
-                  // actually computed from.
-                  <span className="whitespace-nowrap">
-                    <span className="text-negative">{formatMoney(month.fundSalary)}</span>
-                    <span className="text-caption text-ink-secondary">
-                      {' '}
-                      {t('wealth.fundDetail.months.versus', { amount: formatMoney(month.slipSalary) })}
-                    </span>
+                {/* The base the two documents each say the deposit was worked out
+                    on (D-169), only where they disagree: both figures, because the
+                    interesting fact is the pair, and the fund's is the one marked —
+                    it is the number the deposit was actually computed from. */}
+                {month.salaryStatus === 'DIFFERS' && month.fundSalary !== undefined && month.slipSalary !== undefined && (
+                  <span className="block text-caption text-ink-secondary">
+                    <Phrase
+                      text={t('wealth.fundDetail.months.basePair')}
+                      parts={{
+                        fund: <span className="text-negative">{formatMoney(month.fundSalary)}</span>,
+                        slip: formatMoney(month.slipSalary),
+                      }}
+                    />
                   </span>
                 )}
-              </td>
-              <td className="py-1.5 pe-6 whitespace-nowrap text-ink-secondary tabular-nums">
-                {month.arrivedOn === undefined ? '—' : toISODate(month.arrivedOn)}
-              </td>
-              <td className="py-1.5 whitespace-nowrap text-caption text-ink-secondary">
-                {month.lagMonths === undefined
-                  ? monthStatusHint(month.status, t)
-                  : month.lagMonths <= 1
-                    ? t('wealth.fundDetail.months.onTime')
-                    : t(countKey('wealth.fundDetail.months.late', month.lagMonths), { count: month.lagMonths })}
               </td>
             </tr>
           ))}
@@ -742,8 +764,8 @@ function MonthTable({ months }: { months: readonly MonthlyDeposit[] }) {
 }
 
 /**
- * What the *Computed on* column is saying, said once under the table rather
- * than as a hint on every row.
+ * What the base each deposit was computed on is saying, said once under the
+ * table rather than as a column on every row.
  *
  * **Three sentences because there are three answers, and the third is the one
  * that matters** (D-169). A base neither document prints is not agreement; a
@@ -759,11 +781,7 @@ function BaseNote({ months }: { months: readonly MonthlyDeposit[] }) {
   const t = useT()
 
   if (known.length === 0) {
-    return (
-      <p className="mt-2 max-w-prose text-caption text-ink-secondary">
-        <Phrase text={t('wealth.fundDetail.months.baseNone')} parts={{ column: <em>{t('wealth.fundDetail.months.computedOn')}</em> }} />
-      </p>
-    )
+    return <p className="mt-2 max-w-prose text-caption text-ink-secondary">{t('wealth.fundDetail.months.baseNone')}</p>
   }
 
   if (differs.length === 0) {
@@ -793,7 +811,11 @@ function monthStatusHint(status: MonthlyDeposit['status'], t: Translate): string
   return status === 'MATCHED' || status === 'EXCEEDS' ? '' : t(`wealth.fundDetail.months.status.${status}`)
 }
 
-/** The working behind the verdict — one row per window. */
+/**
+ * The working behind the verdict — one window per pair of rows (M64 F59): the
+ * window's readings and salary months on a line of their own, its three figures
+ * under it, so every figure fits the detail's column.
+ */
 function PeriodTable({ periods }: { periods: readonly DepositPeriod[] }) {
   const t = useT()
   const dates = useDates()
@@ -801,47 +823,96 @@ function PeriodTable({ periods }: { periods: readonly DepositPeriod[] }) {
     <table className="mt-4 w-full max-w-3xl">
       <thead>
         <tr className="border-b border-hairline text-caption font-medium text-ink-secondary uppercase">
-          <th className="py-2 pe-6 text-start font-medium">{t('wealth.fundDetail.periods.period')}</th>
-          <th className="py-2 pe-6 text-start font-medium">{t('wealth.fundDetail.periods.salaryMonths')}</th>
-          <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.periods.paychecksSay')}</th>
-          <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.periods.fundSays')}</th>
+          <th className="py-2 pe-3 text-end font-medium">{t('wealth.fundDetail.periods.paychecksSay')}</th>
+          <th className="py-2 pe-3 text-end font-medium">{t('wealth.fundDetail.periods.fundSays')}</th>
           <th className="py-2 text-end font-medium">{t('wealth.fundDetail.periods.difference')}</th>
         </tr>
       </thead>
-      <tbody>
-        {[...periods].reverse().map((period) => (
-          <tr key={period.closingSnapshotId} className="border-b border-hairline">
-            <td className="py-1.5 pe-6 whitespace-nowrap text-ink-secondary tabular-nums">
-              {toISODate(period.from)} → {toISODate(period.to)}
-            </td>
-            <td className="py-1.5 pe-6 whitespace-nowrap text-ink-secondary tabular-nums">
+      {[...periods].reverse().map((period) => (
+        <tbody key={period.closingSnapshotId} className="border-b border-hairline">
+          <tr>
+            <th scope="rowgroup" colSpan={3} className="pt-2 text-start text-caption font-normal text-ink-secondary tabular-nums">
               {period.salaryFrom === undefined || period.salaryTo === undefined
-                ? '—'
-                : `${dates.monthShort(period.salaryFrom)} — ${dates.monthShort(period.salaryTo)}`}
-            </td>
+                ? t('wealth.fundDetail.periods.window', { from: toISODate(period.from), to: toISODate(period.to) })
+                : t('wealth.fundDetail.periods.windowSalary', {
+                    from: toISODate(period.from),
+                    to: toISODate(period.to),
+                    salaryFrom: dates.monthShort(period.salaryFrom),
+                    salaryTo: dates.monthShort(period.salaryTo),
+                  })}
+            </th>
+          </tr>
+          <tr>
             {/* **No payslips is not ₪0.00.** A window the app has no slips for
                 has nothing to say about what was due, and printing a zero there
                 would turn "I do not know" into "nothing was owed" — which then
                 makes every difference in the row look like a surplus. */}
-            <td className="py-1.5 pe-6 text-end tabular-nums">
+            <td className="pe-3 pb-1.5 text-end whitespace-nowrap tabular-nums">
               {hasPayslips(period) ? formatMoney(period.expected.total) : '—'}
             </td>
-            <td className="py-1.5 pe-6 text-end tabular-nums">
+            <td className="pe-3 pb-1.5 text-end whitespace-nowrap tabular-nums">
               {period.reported === undefined ? '—' : formatMoney(period.reported)}
             </td>
             <td
-              className={`py-1.5 text-end tabular-nums ${
-                hasPayslips(period) && period.gap !== undefined && period.gap.minor > 0
-                  ? 'text-negative'
-                  : ''
+              className={`pb-1.5 text-end whitespace-nowrap tabular-nums ${
+                hasPayslips(period) && period.gap !== undefined && period.gap.minor > 0 ? 'text-negative' : ''
               }`}
             >
               {hasPayslips(period) && period.gap !== undefined ? formatMoney(period.gap) : '—'}
             </td>
           </tr>
-        ))}
-      </tbody>
+        </tbody>
+      ))}
     </table>
+  )
+}
+
+/**
+ * The fund's answer, in three plain sentences (M64 F60): what it is worth, whether
+ * its deposits arrived, and what its fee costs a year. Each one has its section
+ * below, with the working; a part with no answer says which, never a zero.
+ */
+function FundAnswer({
+  name,
+  latest,
+  reconciliation,
+  annualCost,
+}: {
+  name: string
+  latest: FundBalanceSnapshot | undefined
+  reconciliation: DepositReconciliation
+  annualCost: Money | undefined
+}) {
+  const t = useT()
+  const dates = useDates()
+  const fund = <Bidi>{name}</Bidi>
+  const worth =
+    latest === undefined ? (
+      <Phrase text={t('wealth.fundDetail.answer.noWorth')} parts={{ name: fund }} />
+    ) : (
+      <Phrase
+        text={t('wealth.fundDetail.answer.worth')}
+        parts={{ name: fund, balance: wholeMoney(latest.totalBalance), month: dates.monthShort(yearMonthOf(latest.asOfDate)) }}
+      />
+    )
+  const deposits =
+    reconciliation.kind !== 'CHECKED'
+      ? t('wealth.fundDetail.answer.depositsUnchecked')
+      : reconciliation.status === 'WITHIN_TOLERANCE'
+        ? t('wealth.fundDetail.answer.depositsArrived')
+        : reconciliation.status === 'DEPOSITS_MISSING'
+          ? t('wealth.fundDetail.answer.depositsMissing', { amount: wholeMoney(reconciliation.gap) })
+          : reconciliation.status === 'DEPOSITS_EXCEED_PAYSLIPS'
+            ? t('wealth.fundDetail.answer.depositsExceed', { amount: wholeMoney(abs(reconciliation.gap)) })
+            : t('wealth.fundDetail.answer.depositsExplained', { amount: wholeMoney(abs(reconciliation.gap)) })
+  const fee =
+    annualCost === undefined
+      ? t('wealth.fundDetail.answer.feeUnknown')
+      : t('wealth.fundDetail.answer.fee', { cost: wholeMoney(annualCost) })
+  return (
+    <>
+      {worth} {deposits} {fee}
+    </>
   )
 }
 

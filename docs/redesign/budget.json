@@ -102,12 +102,12 @@
       "screens": 1.1
     },
     "#/wealth/funds/:id": {
-      "words": 520,
+      "words": 420,
       "blocks": 10,
       "figures": 2,
-      "actions": 24,
+      "actions": 20,
       "colours": 10,
-      "screens": 3.3
+      "screens": 2.8
     },
     "#/wealth/fees": {
       "words": 460,
@@ -126,12 +126,12 @@
       "screens": 1.1
     },
     "#/wealth/goals/:id": {
-      "words": 370,
+      "words": 360,
       "blocks": 6,
       "figures": 1,
       "actions": 20,
       "colours": 14,
-      "screens": 1.6
+      "screens": 1.4
     },
     "#/wealth/debts/:id": {
       "words": 350,
