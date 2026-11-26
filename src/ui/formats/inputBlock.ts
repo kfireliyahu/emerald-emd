@@ -21,6 +21,7 @@ import { INPUT_KIND, inputDraft, inputViewRefusals, type InputShape } from '@/do
 import { screenWords, type StoredRow } from '@/domain/format/row.ts'
 import { blankDraft, offeredOf, type RowDraft } from '@/domain/format/rowDraft.ts'
 import { entryDefaults, savedNameRefusal, withArticle, type DashboardBlock } from '@/domain/format/view.ts'
+import { translate } from '@/i18n/catalogue.ts'
 import type { Translate } from '@/i18n/current.ts'
 
 import { inputAddress } from './addressFilter.ts'
@@ -32,11 +33,14 @@ export interface BlockProblem {
   readonly reason: string
 }
 
+/** The sentences say their words with a `t` (M64 F36); left out, English — what a conversation reads. */
+const english: Translate = (key, parts) => translate('en', key, parts)
+
 /** *Adds a card charge as account Visa · date today* — or *Adds a card charge* when it sets nothing. */
-export function blockSentence(declaration: FormatDeclaration, shape: InputShape): string {
+export function blockSentence(declaration: FormatDeclaration, shape: InputShape, t: Translate = english): string {
   const sets = addsAsWords(inputFormOf(declaration, shape).sets)
-  const one = withArticle(declaration.title.toLowerCase())
-  return sets === '' ? `Adds ${one}` : `Adds ${one} as ${sets}`
+  const parts = { article: withArticle(declaration.title.toLowerCase()), title: declaration.title }
+  return sets === '' ? t('dashboards.said.adds', parts) : t('dashboards.said.addsAs', { ...parts, sets })
 }
 
 /** Where the block's form starts, and starts again after every Add: the view's defaults, a date's word worked out on `day`. */
@@ -72,12 +76,13 @@ export function stageInput(
   startsAt: RowDraft,
   day: string,
   declarations: readonly FormatDeclaration[],
+  t: Translate = english,
 ): { readonly row: StagedRow } | { readonly problems: readonly BlockProblem[] } {
   // `typedOf`'s test, here so the conversation's dashboard text can read this module without React's.
   const start = offeredOf(declaration, startsAt)
   const typed = Object.entries(offeredOf(declaration, draft)).filter(([key, value]) => JSON.stringify(value) !== JSON.stringify(start[key]))
   if (typed.length === 0) {
-    return { problems: [{ column: undefined, reason: 'Nothing has been filled in yet.' }] }
+    return { problems: [{ column: undefined, reason: t('dashboards.refuse.nothingFilled') }] }
   }
   const batch = stageRows(db, declaration, [offeredOf(declaration, draft, day)], declarations)
   if (batch.refusals.length > 0) {
@@ -90,7 +95,7 @@ export function stageInput(
     return { problems }
   }
   const [row] = batch.accepted
-  return row === undefined ? { problems: [{ column: undefined, reason: 'Not added.' }] } : { row }
+  return row === undefined ? { problems: [{ column: undefined, reason: t('dashboards.refuse.notAdded') }] } : { row }
 }
 
 /** Write a staged row: the write entry/new and quick add write by. */
@@ -126,12 +131,17 @@ export function inputBlock(made: InputMade): DashboardBlock {
 }
 
 /** Why a new input view is refused — its name, a name taken, what `arrange_views` refuses too — or nothing. */
-export function inputMadeRefusal(db: Database, declaration: FormatDeclaration, made: InputMade): string | undefined {
+export function inputMadeRefusal(
+  db: Database,
+  declaration: FormatDeclaration,
+  made: InputMade,
+  t: Translate = english,
+): string | undefined {
   const name = made.name.trim()
   const named = savedNameRefusal(name)
   if (named !== undefined) return named
   if (savedViews(db, declaration.name).some((each) => each.name.toLowerCase() === name.toLowerCase())) {
-    return `${declaration.title} already has a view called ${name}.`
+    return t('dashboards.refuse.inputTaken', { format: declaration.title, name })
   }
   const reasons = inputViewRefusals(declaration, made.shape)
   return reasons.length > 0 ? reasons.join(' ') : undefined

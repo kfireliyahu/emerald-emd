@@ -6,13 +6,12 @@ import { useDates, useT, type Translate } from '@/i18n/current.ts'
 import type { DateWords } from '@/i18n/dates.ts'
 import { isOrdered, type AggregateKind, type AggregateSource } from '@/domain/format/aggregate.ts'
 import {
-  edgeHeadline,
+  edgeHeadlineSaid,
   foldNames,
   foldType,
   foldsOver,
   freeColumnName,
-  headlineOf,
-  NEW_LINK_WORDS,
+  headlineSaid,
   nounOf,
   pluralOf,
   suggestedFigureName,
@@ -33,6 +32,7 @@ import { parseYearMonth } from '@/core/time.ts'
 import { matchedOn, type FindPlan, type FoundBy, type FoundGrain, type Unplaced } from '@/domain/format/foundBy.ts'
 import type { Refusal, ReconcilePlan } from '@/domain/format/reconcile.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { spoken } from '@/ui/formats/spoken.ts'
 import { Button } from '@/ui/components/Button.tsx'
 import { IconAction } from '@/ui/components/IconAction.tsx'
 import { Phrase } from '@/ui/components/Phrase.tsx'
@@ -152,8 +152,8 @@ export function ConnectionPanel({
   if (asked.kind === 'NOTHING') {
     return (
       <Frame key="nothing">
-        <p className={HEADLINE}>{emphasised(asked.reason)}</p>
-        {asked.detail !== undefined && <p className="m-0 text-caption text-ink-secondary">{asked.detail}</p>}
+        <p className={HEADLINE}>{emphasised(spoken(t, asked.said), t('connections.belongsTo'))}</p>
+        {asked.detailSaid !== undefined && <p className="m-0 text-caption text-ink-secondary">{spoken(t, asked.detailSaid)}</p>}
         <Actions>
           <Button variant="secondary" onClick={onCancel}>
             {t('connections.panel.ok')}
@@ -460,7 +460,9 @@ export function ConnectionPanel({
     total: figuring ? { kind: fields.kind, name: fields.figure } : undefined,
   }
   const headline =
-    existing !== undefined && existing.dangling ? edgeHeadline(existing, declarations) : headlineOf(proposal, declarations, answers)
+    existing !== undefined && existing.dangling
+      ? spoken(t, edgeHeadlineSaid(existing, declarations))
+      : spoken(t, headlineSaid(proposal, declarations, answers))
 
   /** A new kind or a new line: the name follows it, until somebody names it. */
   const totalChanged = (next: Partial<Fields>): void => {
@@ -1571,14 +1573,14 @@ function unplacedReason(t: Translate, calendar: DateWords, each: Unplaced, plan:
 }
 
 /** The two port words in a sentence are the port's words, so they are set as such. */
-function emphasised(text: string): ReactNode {
-  const at = text.indexOf(NEW_LINK_WORDS)
+function emphasised(text: string, words: string): ReactNode {
+  const at = text.indexOf(words)
   if (at === -1) return text
   return (
     <>
       {text.slice(0, at)}
-      <i className="font-semibold">{NEW_LINK_WORDS}</i>
-      {text.slice(at + NEW_LINK_WORDS.length)}
+      <i className="font-semibold">{words}</i>
+      {text.slice(at + words.length)}
     </>
   )
 }

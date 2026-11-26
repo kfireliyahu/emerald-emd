@@ -16,6 +16,7 @@ import { listRows } from '@/data/repositories/formatRowRepository.ts'
 import { setListSetting, viewSettings } from '@/data/repositories/formatViewRepository.ts'
 import {
   dueBucket,
+  dueSaid,
   dueText,
   inDueOrder,
   listGroups,
@@ -178,6 +179,11 @@ describe('a list’s groups and dues (M53 U4)', () => {
 
   it('says a due as the mockup does', () => {
     expect(dueText('2026-10-22', TODAY, false)).toEqual({ text: 'today', late: false })
+    // The screen's words by key (M64 F37), the same spans.
+    expect(dueSaid('2026-10-22', TODAY, false)).toEqual({ said: { key: 'views.due.today' }, late: false })
+    expect(dueSaid('2026-10-19', TODAY, false)).toEqual({ said: { key: 'views.due.late', parts: { count: 3 } }, late: true })
+    expect(dueSaid('2026-10-24', TODAY, false)).toEqual({ said: { key: 'views.due.soon', parts: { count: 2 } }, late: false })
+    expect(dueSaid('2027-01-05', TODAY, false)).toEqual({ said: { key: 'views.due.dateYear' }, late: false })
     expect(dueText('2026-10-23', TODAY, false)?.text).toBe('tomorrow')
     expect(dueText('2026-10-24', TODAY, false)?.text).toBe('Sat, in 2 days')
     expect(dueText('2026-11-05', TODAY, false)?.text).toBe('5 Nov')
@@ -267,7 +273,7 @@ describe('the task list, in the app and in a conversation (M53 U4, D-519)', () =
     ])
     expect(shed?.rows[0]?.cells).toEqual([
       { kind: 'chips', column: 'tags', members: ['call'] },
-      { kind: 'date', column: 'due', text: '21 Oct', late: false, long: '2026-10-21' },
+      { kind: 'date', column: 'due', text: '21 Oct', said: { key: 'views.due.date' }, late: false, long: '2026-10-21' },
     ])
     // Nobody said which date is the due: yesterday is only its day (M54 F2, D-532); the project is left off the line.
     expect(listOrder(picture).at(-1)?.title).toBe('Pick paint colour')
@@ -283,7 +289,7 @@ describe('the task list, in the app and in a conversation (M53 U4, D-519)', () =
     expect(notDate).toContain('`due` names the date a row is due by; `notes` is text.')
     const dated = await read(path)
     const late = listPicture(dated, task, listFormats(dated), {}, viewSettings(dated, 'task', 'list'), TODAY)
-    expect(late.groups[0]?.rows[0]?.cells.at(-1)).toEqual({ kind: 'date', column: 'due', text: 'yesterday', late: true, long: '2026-10-21' })
+    expect(late.groups[0]?.rows[0]?.cells.at(-1)).toEqual({ kind: 'date', column: 'due', text: 'yesterday', said: { key: 'views.due.yesterday' }, late: true, long: '2026-10-21' })
     // The screen's Due moves it to another date, and the first stops saying late.
     setListSetting(dated, 'task', 'started', 'due')
     expect(viewSettings(dated, 'task', 'list').get('due')).toBeUndefined()
@@ -314,6 +320,12 @@ describe('the task list, in the app and in a conversation (M53 U4, D-519)', () =
     // Under a 'due today' filter, the day too.
     const today = quickAdd(task, picture.shape, shed?.implies ?? {}, { match: { due: 'today' } }, TODAY, picture.names)
     expect(today.placeholder).toBe('Add a task · inbox, due today, Garden shed')
+    // The same words for a screen to say (M64 F37): the document's values as written, the date by key.
+    expect(today.words).toEqual([
+      { kind: 'value', text: 'inbox' },
+      { kind: 'date', column: 'due', said: { key: 'views.due.today' }, long: TODAY },
+      { kind: 'value', text: 'Garden shed' },
+    ])
     expect(filterImplies(task, { match: { state: 'NEXT', priority: ['high', 'low'] } }, TODAY)).toEqual({ state: 'next' })
     db.close()
 

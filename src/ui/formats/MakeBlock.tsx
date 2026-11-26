@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Database } from 'sql.js'
 
-import { filterQuery, filterText, type RowFilter } from '@/data/repositories/formatFilterRepository.ts'
+import { filterQuery, type RowFilter } from '@/data/repositories/formatFilterRepository.ts'
 import { countRows } from '@/data/repositories/formatRowRepository.ts'
 import { indexOf } from '@/data/repositories/formatJoinRepository.ts'
 import { boardSettings, savedViews } from '@/data/repositories/formatViewRepository.ts'
@@ -16,7 +16,7 @@ import { Phrase } from '@/ui/components/Phrase.tsx'
 import { canonicalAddress, filterAddress, type AddressOrder, type ColumnChoice } from './addressFilter.ts'
 import { ColumnFilter } from './FilterBand.tsx'
 import { ColumnsChoice } from './ColumnsChoice.tsx'
-import { rollupSentence, rollupWords, summableColumns } from './dashboard.ts'
+import { filterWords, rollupSentence, rollupWords, summableColumns } from './dashboard.ts'
 import { inputBlock, inputMadeRefusal, makeInputView } from './inputBlock.ts'
 import { draftShape, inputViewName } from './inputForm.ts'
 import { InputFields } from './InputView.tsx'
@@ -29,7 +29,7 @@ import {
   MADE_KINDS,
   makeChart,
   makeView,
-  PERIOD_UNSAID,
+  periodUnsaid,
   periodColumns,
   viewBlock,
   viewRefusal,
@@ -163,7 +163,7 @@ function FormatChoice({
 function Held({ filter, order, onClear }: { readonly filter: RowFilter; readonly order?: AddressOrder | undefined; readonly onClear: () => void }) {
   const t = useT()
   const sorted = order === undefined ? [] : [t('dashboards.make.sortedBy', { column: order.column, arrow: order.descending ? '↓' : '↑' })]
-  const words = [filterText(filter), ...sorted]
+  const words = [filterWords(filter, t), ...sorted]
     .filter((each) => each !== '')
     .join(', ')
   if (words === '') return null
@@ -293,7 +293,7 @@ export function ViewForm({
   const held = read.ok ? countRows(db, declaration, read.value) : undefined
   const submit = (): void => {
     const made = { dashboard, format: declaration.name, kind: making.kind, name: making.name.trim(), address }
-    const refused = viewRefusal(db, declaration, blocks, made) ?? onPlace((database) => makeView(database, blocks, made, place), viewBlock(made))
+    const refused = viewRefusal(db, declaration, blocks, made, t) ?? onPlace((database) => makeView(database, blocks, made, place), viewBlock(made))
     if (refused !== undefined) onMaking({ ...making, refused })
   }
   return (
@@ -407,17 +407,18 @@ export function ChartForm({
     filter: making.filter,
     name: making.name,
   }
-  const plan = making.name.trim() === '' ? undefined : chartPlan(db, declarations, blocks, made)
+  const plan = making.name.trim() === '' ? undefined : chartPlan(db, declarations, blocks, made, t)
   const submit = (): void => {
-    const judged = chartPlan(db, declarations, blocks, made)
+    const judged = chartPlan(db, declarations, blocks, made, t)
     const refused = !judged.ok ? judged.error : onPlace((database) => makeChart(database, blocks, judged.value, place), judged.value.block)
     if (refused !== undefined) onMaking({ ...making, refused })
   }
   // A refusal is said once, where it is mended (M55 U7): a missing month at
   // *By month of*, after an attempt; the preview's own refusal not again under the buttons.
-  const periodUnsaid = making.refused === PERIOD_UNSAID
-  const previewSays = plan !== undefined && !plan.ok && plan.error !== PERIOD_UNSAID ? plan.error : undefined
-  const refused = periodUnsaid || making.refused === previewSays ? undefined : making.refused
+  const unsaid = periodUnsaid(t)
+  const periodNotSaid = making.refused === unsaid
+  const previewSays = plan !== undefined && !plan.ok && plan.error !== unsaid ? plan.error : undefined
+  const refused = periodNotSaid || making.refused === previewSays ? undefined : making.refused
   return (
     <>
       <Heading>{t('dashboards.menu.newChart')}</Heading>
@@ -450,17 +451,17 @@ export function ChartForm({
                   name="chart-period"
                   className="accent-ink"
                   checked={making.period === column.name}
-                  aria-invalid={periodUnsaid || undefined}
-                  aria-describedby={periodUnsaid ? 'chart-period-unsaid' : undefined}
+                  aria-invalid={periodNotSaid || undefined}
+                  aria-describedby={periodNotSaid ? 'chart-period-unsaid' : undefined}
                   onChange={() => set({ period: column.name })}
                 />
                 {column.name.replace(/_/g, ' ')}
               </label>
             ))
           )}
-          {periodUnsaid && (
+          {periodNotSaid && (
             <span id="chart-period-unsaid" role="alert" className="text-caption text-negative">
-              {PERIOD_UNSAID}
+              {unsaid}
             </span>
           )}
         </Field>
@@ -498,7 +499,7 @@ export function ChartForm({
         </Field>
         <div className="bg-surface px-2.5 py-2 text-caption text-ink-secondary">
           {plan !== undefined && plan.ok ? (
-            `${rollupWords(plan.value.rollup.name)}: ${rollupSentence(plan.value.rollup, declaration)}.`
+            t('dashboards.make.chartPreview', { name: rollupWords(plan.value.rollup.name), sentence: rollupSentence(plan.value.rollup, declaration, t) })
           ) : previewSays !== undefined ? (
             <span className="text-negative">{previewSays}</span>
           ) : (
@@ -547,7 +548,7 @@ export function InputViewForm({
   }
   const made = { dashboard, format: declaration.name, name: making.name, shape: making.shape, isDefault: making.isDefault }
   const submit = (): void => {
-    const refused = inputMadeRefusal(db, declaration, made) ?? onPlace((database) => makeInputView(database, blocks, made), inputBlock(made))
+    const refused = inputMadeRefusal(db, declaration, made, t) ?? onPlace((database) => makeInputView(database, blocks, made), inputBlock(made))
     if (refused !== undefined) onMaking({ ...making, refused })
   }
   return (

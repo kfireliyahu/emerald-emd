@@ -465,6 +465,92 @@ export const formats = {
     waitName: 'what one of them is called',
     waitColumn: 'a column',
   },
+  /**
+   * M64 F37: what a screen calls each type, what it holds and what surprises
+   * somebody who picked it — `TYPE_WORDS` in the screen's language; the
+   * declaration keeps its own word.
+   */
+  type: {
+    text: { shown: 'Text', gloss: 'Words. A name, a note, a code — anything not measured.' },
+    integer: { shown: 'Whole number', gloss: 'A whole number, with no fractional part at all.' },
+    real: { shown: 'Number', gloss: 'A number that can have a fractional part.' },
+    date: { shown: 'Date', gloss: 'A day. No time of day and no timezone, ever.' },
+    boolean: { shown: 'Yes or no', gloss: 'True or false, and nothing in between.' },
+    enum: {
+      shown: 'Choice',
+      gloss: 'One of a list of words you write down here.',
+      catch: 'Each value is any text — spaces, emoji, any language — listed once. A row may send any case; it is stored as written, and anything else is refused.',
+    },
+    money: {
+      shown: 'Money',
+      gloss: 'An amount of money, in a currency the row names.',
+      catch: 'Becomes two columns — minor units and a currency — so it is never a float.',
+    },
+    link: {
+      shown: 'Link',
+      gloss: 'A row of another format.',
+      catch: 'An equation here may read one column of the row it names, and no further.',
+    },
+    links: {
+      shown: 'Several links',
+      gloss: 'Several rows of another format, in order.',
+      catch: 'Written as a list of row names or ids. An equation reads it only by an aggregate.',
+    },
+    enums: {
+      shown: 'Several choices',
+      gloss: 'Several of a list of words you write down here — tags, allergens.',
+      catch: 'Written as a list — ["vegan", "quick"]. Each member is checked against the list, and one outside it is refused by name.',
+    },
+    quantity: {
+      shown: 'Quantity',
+      gloss: 'A figure and the unit that row is in — 150 g here, 200 ml there.',
+      catch: 'Two columns. If every row shares one unit, a real with a unit is simpler.',
+    },
+    decimal: {
+      shown: 'Exact decimal',
+      gloss: 'A number kept to a fixed count of places — a rate, a unit price.',
+      catch: 'Needs a scale, the places it keeps (1 to 9). Written as a string, "3.5"; extra places are refused, never rounded.',
+    },
+    percent: {
+      shown: 'Percentage',
+      gloss: 'A share, shown as 12.5% — a VAT rate, a fee.',
+      catch: 'Typed 87, "87%" or 0.87 — each 87%; 1 is 1%, "0.5%" half of one. Four places. A claim reads 0.87.',
+    },
+    month: { shown: 'Month', gloss: 'A month, as YYYY-MM. A period, not a day in it.' },
+    time: {
+      shown: 'Time of day',
+      gloss: 'A time of day, HH:MM — a shift start.',
+      catch: 'Typed "09:30", "1430" or "2:30pm". end - start of two is hours, past midnight too.',
+    },
+    elsewhere: {
+      shown: 'Row in another document',
+      gloss: 'A row in another document — its path, then the row’s name.',
+      catch: 'Written "F:/projects/site/site.emd S1 U5". Never refused for being out of reach: read back, it says what the row holds now, or that it is unresolved.',
+    },
+    file: { shown: 'File', gloss: 'A file on this computer, by its path.', catch: 'Or a local app’s address; never http.' },
+    instant: {
+      shown: 'Date and time',
+      gloss: 'A moment, kept in UTC to the millisecond.',
+      catch: 'Written with its offset — 2026-09-23T14:05:00Z. A time with no zone is refused.',
+    },
+  },
+  /** The headings the rarer types are grouped under (`MORE_TYPES`). */
+  typeGroup: {
+    numbers: 'Numbers',
+    dates: 'Dates and times',
+    several: 'Several',
+    outside: 'Outside this document',
+  },
+  /** What a unit measures (`DIMENSIONS`), beside the units this document knows. */
+  dimension: {
+    MASS: 'mass',
+    VOLUME: 'volume',
+    LENGTH: 'length',
+    TIME: 'time',
+    ENERGY: 'energy',
+    COUNT: 'count',
+    RATIO: 'ratio',
+  },
   /** M64 F20: one column, asked (`ColumnQuestions`). `{type}` is the declaration's word for it. */
   column: {
     storedAs: 'Stored as {type}',

@@ -122,6 +122,8 @@ export interface GraphPort {
   readonly detail: string | undefined
   /** What the port is and what a drag from it does, in a sentence: its hover. */
   readonly says: string
+  /** `detail` and `says` as a screen says them (M64 F35): by key, with their parts. */
+  readonly said: { readonly says: Spoken; readonly detail: Spoken | undefined }
 }
 
 /** One format, as a bubble. */
@@ -204,7 +206,14 @@ export type Proposal =
    * Nothing, and the reason names what to drag instead. `detail` is the quieter
    * line under it, when the reason needs one (M29 F10).
    */
-  | { readonly kind: 'NOTHING'; readonly reason: string; readonly detail?: string | undefined }
+  | {
+      readonly kind: 'NOTHING'
+      readonly reason: string
+      readonly detail?: string | undefined
+      /** `reason` and `detail` as a screen says them (M64 F35). */
+      readonly said: Spoken
+      readonly detailSaid?: Spoken | undefined
+    }
 
 /* ------------------------------------------------------------- the picture */
 
@@ -216,6 +225,11 @@ export function graphOf(declarations: readonly FormatDeclaration[]): readonly Gr
     edges.filter((edge) => samePort(edge.from, port) || samePort(edge.to, port)).length
   const declared = new Set(declarations.map((each) => each.name))
   const title = titleIn(declarations)
+  const spoken = (says: Spoken, detail?: Spoken): Pick<GraphPort, 'says' | 'detail' | 'said'> => ({
+    says: english(says),
+    detail: detail === undefined ? undefined : english(detail),
+    said: { says, detail },
+  })
 
   return declarations.map((format) => {
     const row: Port = { kind: 'ROW', format: format.name }
@@ -224,6 +238,7 @@ export function graphOf(declarations: readonly FormatDeclaration[]): readonly Gr
       const port: Port = { kind: 'COLUMN', format: format.name, column: column.name }
       const target = isLinkType(column.type) ? column.target : undefined
       const linked = target !== undefined && target !== ''
+      const type: Spoken = { key: `connections.said.type.${column.type}` }
       return {
         port,
         label: column.name,
@@ -231,16 +246,23 @@ export function graphOf(declarations: readonly FormatDeclaration[]): readonly Gr
         target: target !== undefined && declared.has(target) ? target : undefined,
         edges: through(port),
         // A list link names several, and says so where its row is drawn (M54 F3).
-        detail: linked ? (column.type === 'links' ? `many ${pluralOf(title(target))}` : `one ${title(target)}`) : undefined,
-        says: linked
-          ? `${linkSaid(format.title, column, title(target))}.`
-          : `${column.name} — ${typeWord(column.type)}${column.unit === undefined ? '' : `, in ${column.unit}`}. ` +
-            'Drag onto a format to make it a connection.',
+        ...(linked
+          ? spoken(
+              { key: 'connections.said.end', parts: { said: linkSpoken(format.title, column, title(target)) } },
+              column.type === 'links'
+                ? { key: 'connections.said.manyOf', parts: named('one', title(target)) }
+                : { key: 'connections.said.oneOf', parts: named('one', title(target)) },
+            )
+          : spoken(
+              column.unit === undefined
+                ? { key: 'connections.said.port', parts: { column: column.name, type } }
+                : { key: 'connections.said.portIn', parts: { column: column.name, type, unit: column.unit } },
+            )),
       }
     })
     const figures = format.aggregates.map((aggregate): GraphPort => {
       const port: Port = { kind: 'FIGURE', format: format.name, figure: aggregate.name }
-      const many = pluralOf(title(aggregate.over.format))
+      const many = named('many', title(aggregate.over.format))
       const every = foldsEvery(aggregate.over)
       return {
         port,
@@ -248,11 +270,16 @@ export function graphOf(declarations: readonly FormatDeclaration[]): readonly Gr
         type: undefined,
         target: undefined,
         edges: through(port),
-        detail: every ? `from every ${nounOf(title(aggregate.over.format))}` : `from ${many}`,
-        says: every
-          ? `${aggregate.name} adds up every ${nounOf(title(aggregate.over.format))}.`
-          : `${aggregate.name} adds up its ${many}.`,
+        ...spoken(
+          { key: every ? 'connections.said.figureEvery' : 'connections.said.figureIts', parts: { figure: aggregate.name, ...many } },
+          { key: every ? 'connections.said.fromEvery' : 'connections.said.fromRows', parts: many },
+        ),
       }
+    })
+    const quiet = (says: string): Pick<GraphPort, 'says' | 'detail' | 'said'> => ({
+      says,
+      detail: undefined,
+      said: { says: { key: 'connections.said.plain', parts: { said: says } }, detail: undefined },
     })
     return {
       name: format.name,
@@ -264,8 +291,8 @@ export function graphOf(declarations: readonly FormatDeclaration[]): readonly Gr
         type: undefined,
         target: undefined,
         edges: through(row),
-        detail: undefined,
-        says: `${format.title}. Drop “${NEW_LINK_WORDS}” from another format here.`,
+        // The screen says these three itself (`connections.graph.*`).
+        ...quiet(`${format.title}. Drop “${NEW_LINK_WORDS}” from another format here.`),
       },
       ports: [
         ...columns,
@@ -276,8 +303,7 @@ export function graphOf(declarations: readonly FormatDeclaration[]): readonly Gr
           type: undefined,
           target: undefined,
           edges: 0,
-          detail: undefined,
-          says: `Drag onto another format: each ${each} belongs to one of those.`,
+          ...quiet(`Drag onto another format: each ${each} belongs to one of those.`),
         },
         {
           port: { kind: 'NEW_FIGURE', format: format.name },
@@ -285,8 +311,7 @@ export function graphOf(declarations: readonly FormatDeclaration[]): readonly Gr
           type: undefined,
           target: undefined,
           edges: 0,
-          detail: undefined,
-          says: `Drag onto another format: each ${each} has many of those, and can add them up.`,
+          ...quiet(`Drag onto another format: each ${each} has many of those, and can add them up.`),
         },
       ],
     }
@@ -338,10 +363,16 @@ export function pluralOf(title: string): string {
  * by*; *each unit names any number of units in blocks*.
  */
 export function linkSaid(from: string, column: { readonly name: string; readonly type: ColumnType }, to: string): string {
+  return english(linkSpoken(from, column, to))
+}
+
+/** `linkSaid` as a screen says it (M64 F35). */
+export function linkSpoken(from: string, column: { readonly name: string; readonly type: ColumnType }, to: string): Spoken {
   const words = column.name.replace(/_/g, ' ')
-  if (column.type === 'links') return `Each ${nounOf(from)} names any number of ${pluralOf(to)} in ${words}`
-  if (words.toLowerCase() === nounOf(to).toLowerCase()) return `Each ${nounOf(from)} belongs to one ${nounOf(to)}`
-  return `Each ${nounOf(from)} names one ${nounOf(to)} in ${words}`
+  const parts = { ...named('many', from), ...named('one', to), column: words }
+  if (column.type === 'links') return { key: 'connections.said.namesAny', parts }
+  if (words.toLowerCase() === nounOf(to).toLowerCase()) return { key: 'connections.said.belongsOne', parts }
+  return { key: 'connections.said.namesOne', parts }
 }
 
 /** A format's title, or — for one this document does not declare — its name, said. */
@@ -352,46 +383,6 @@ export function titleIn(declarations: readonly FormatDeclaration[]): (name: stri
     if (title !== undefined) return title
     const said = name.replace(/_/g, ' ')
     return capitalize(said)
-  }
-}
-
-/** What a column holds, in a word a person would use. */
-function typeWord(type: ColumnType): string {
-  switch (type) {
-    case 'text':
-      return 'text'
-    case 'integer':
-    case 'real':
-    case 'decimal':
-      return 'a number'
-    case 'percent':
-      return 'a percentage'
-    case 'date':
-      return 'a date'
-    case 'month':
-      return 'a month'
-    case 'instant':
-      return 'a moment'
-    case 'time':
-      return 'a time of day'
-    case 'boolean':
-      return 'yes or no'
-    case 'enum':
-      return 'one of a list'
-    case 'money':
-      return 'money'
-    case 'quantity':
-      return 'an amount with its unit'
-    case 'link':
-      return 'a connection'
-    case 'links':
-      return 'a list of rows'
-    case 'elsewhere':
-      return 'a row in another document'
-    case 'file':
-      return 'a file'
-    case 'enums':
-      return 'several of a list'
   }
 }
 
@@ -505,19 +496,27 @@ export function proposalFor(
   other: Port,
   declarations: readonly FormatDeclaration[],
 ): Proposal {
-  if (samePort(one, other)) {
-    return { kind: 'NOTHING', reason: `Those two are the same. Drag ${NEW_LINK_WORDS} onto another format.` }
-  }
+  if (samePort(one, other)) return nothing({ key: 'connections.said.same', parts: { words: BELONGS } })
   const first = read(one, other, declarations)
   if (first.kind !== 'NOTHING') return first
   const second = read(other, one, declarations)
   return second.kind === 'NOTHING' ? first : second
 }
 
+/** The words *belongs to one…*, as a part of a sentence. */
+const BELONGS: Spoken = { key: 'connections.belongsTo' }
+
+/** Nothing, said in English for a conversation and by key for a screen. */
+function nothing(said: Spoken, detailSaid?: Spoken): Proposal {
+  return detailSaid === undefined
+    ? { kind: 'NOTHING', reason: english(said), said }
+    : { kind: 'NOTHING', reason: english(said), detail: english(detailSaid), said, detailSaid }
+}
+
 function read(from: Port, to: Port, declarations: readonly FormatDeclaration[]): Proposal {
   const index = new Map(declarations.map((each) => [each.name, each]))
   const title = titleIn(declarations)
-  const missing = (name: string): Proposal => ({ kind: 'NOTHING', reason: `There is no ${title(name)} format.` })
+  const missing = (name: string): Proposal => nothing({ key: 'connections.said.noFormat', parts: named('format', title(name)) })
 
   // A new link column, pointed wherever it was dropped. The plain case, and
   // the only one that needs nothing to exist yet.
@@ -539,13 +538,13 @@ function read(from: Port, to: Port, declarations: readonly FormatDeclaration[]):
   if (from.kind === 'COLUMN' && to.kind === 'ROW') {
     const column = index.get(from.format)?.columns.find((each) => each.name === from.column)
     if (column === undefined) {
-      return { kind: 'NOTHING', reason: `${title(from.format)} has no column called ${from.column}.` }
+      return nothing({ key: 'connections.said.noColumn', parts: { ...named('format', title(from.format)), column: from.column } })
     }
     if (column.type === 'link' && column.target === to.format) {
-      return {
-        kind: 'NOTHING',
-        reason: `${from.column} already connects each ${nounOf(title(from.format))} to a ${nounOf(title(to.format))}.`,
-      }
+      return nothing({
+        key: 'connections.said.already',
+        parts: { column: from.column, ...named('many', title(from.format)), ...named('one', title(to.format)) },
+      })
     }
     return {
       kind: 'LINK',
@@ -560,16 +559,18 @@ function read(from: Port, to: Port, declarations: readonly FormatDeclaration[]):
   if (from.kind === 'NEW_FIGURE' && to.kind === 'COLUMN') {
     const column = index.get(to.format)?.columns.find((each) => each.name === to.column)
     if (column === undefined || column.type !== 'link') {
-      return {
-        kind: 'NOTHING',
-        reason: `${to.column} isn’t a connection. Drop it on the whole format, or on a column that is.`,
-      }
+      return nothing({ key: 'connections.said.notLink', parts: { column: to.column } })
     }
     if (column.target !== from.format) {
-      return {
-        kind: 'NOTHING',
-        reason: `${to.column} connects ${pluralOf(title(to.format))} to ${title(column.target ?? '')}, not to ${title(from.format)}.`,
-      }
+      return nothing({
+        key: 'connections.said.elsewhere',
+        parts: {
+          column: to.column,
+          ...named('many', title(to.format)),
+          ...named('target', title(column.target ?? '')),
+          ...named('one', title(from.format)),
+        },
+      })
     }
     return { kind: 'FIGURE', format: from.format, over: { format: to.format, column: to.column } }
   }
@@ -592,33 +593,22 @@ function read(from: Port, to: Port, declarations: readonly FormatDeclaration[]):
       }
     }
     if (aimed.length > 1) {
-      const ways = aimed.length === 2 ? 'two ways' : `${String(aimed.length)} ways`
-      const many = pluralOf(title(to.format))
-      return {
-        kind: 'NOTHING',
-        reason: `${capitalize(many)} belong to a ${nounOf(title(from.format))} in ${ways}. Drop it on the one to add up.`,
-      }
+      const ways: Spoken = aimed.length === 2 ? { key: 'connections.said.twoWays' } : { key: 'connections.said.nWays', parts: { count: aimed.length } }
+      return nothing({ key: 'connections.said.ways', parts: { ...named('many', title(to.format)), ...named('one', title(from.format)), ways } })
     }
     return { kind: 'LINK_AND_FIGURE', format: from.format, from: to.format }
   }
 
   if (from.kind === 'ROW' && to.kind === 'ROW') {
-    return {
-      kind: 'NOTHING',
-      reason: `Drag ${NEW_LINK_WORDS} from the format there are many of.`,
-      detail: 'Two whole formats don’t say which one has many of the other.',
-    }
+    return nothing({ key: 'connections.said.fromMany', parts: { words: BELONGS } }, { key: 'connections.said.fromManyWhy' })
   }
 
   if (from.kind === 'FIGURE' || to.kind === 'FIGURE') {
     const figure = from.kind === 'FIGURE' ? from.figure : to.kind === 'FIGURE' ? to.figure : ''
-    return { kind: 'NOTHING', reason: `Press ${figure} to change it.` }
+    return nothing({ key: 'connections.said.press', parts: { figure } })
   }
 
-  return {
-    kind: 'NOTHING',
-    reason: `Those two don’t connect. Drag ${NEW_LINK_WORDS} onto another format.`,
-  }
+  return nothing({ key: 'connections.said.noConnect', parts: { words: BELONGS } })
 }
 
 /**
@@ -648,34 +638,48 @@ export function headlineOf(
   declarations: readonly FormatDeclaration[],
   answers: Answers = {},
 ): string {
+  return english(headlineSaid(proposal, declarations, answers))
+}
+
+/** `headlineOf` as a screen says it (M64 F35). */
+export function headlineSaid(
+  proposal: Proposal,
+  declarations: readonly FormatDeclaration[],
+  answers: Answers = {},
+): Spoken {
   const title = titleIn(declarations)
   const index = new Map(declarations.map((each) => [each.name, each]))
+  const end = (said: Spoken): Spoken => ({ key: 'connections.said.end', parts: { said } })
 
   switch (proposal.kind) {
     case 'LINK': {
       const head = belongs(title(proposal.from), title(proposal.to), answers.found)
-      if (proposal.column === undefined) return `${head}.`
-      if (proposal.retyping) {
-        return `${head}, through ${proposal.column}. What ${proposal.column} holds now is replaced.`
-      }
+      if (proposal.column === undefined) return end(head)
+      if (proposal.retyping) return { key: 'connections.said.through', parts: { head, column: proposal.column } }
       const was = index.get(proposal.from)?.columns.find((each) => each.name === proposal.column)?.target
-      if (was === undefined || was === proposal.to) return `${head}.`
+      if (was === undefined || was === proposal.to) return end(head)
       const totals = foldsOver(declarations, proposal.from, proposal.column).length > 0
-      return (
-        `Each ${nounOf(title(proposal.from))} will belong to one ${nounOf(title(proposal.to))} instead of one ` +
-        `${nounOf(title(was))}.${totals ? ' Totals through it change too.' : ''}`
-      )
+      return {
+        key: totals ? 'connections.said.insteadTotals' : 'connections.said.instead',
+        parts: { ...named('many', title(proposal.from)), ...named('one', title(proposal.to)), ...named('was', title(was)) },
+      }
     }
     case 'LINK_AND_FIGURE': {
       const head = belongs(title(proposal.from), title(proposal.format), answers.found)
       const total = answers.total
-      if (total === undefined) return `${head}.`
-      return `${head}, and each ${nounOf(title(proposal.format))} ${addsUp(total, title(proposal.from))}.`
+      if (total === undefined) return end(head)
+      return {
+        key: 'connections.said.andAdds',
+        parts: { head, ...named('one', title(proposal.format)), adds: addsUp(total, title(proposal.from)) },
+      }
     }
     case 'FIGURE':
-      return `Each ${nounOf(title(proposal.format))} ${addsUp(answers.total, title(proposal.over.format), foldsEvery(proposal.over))}.`
+      return {
+        key: 'connections.said.eachAdds',
+        parts: { ...named('one', title(proposal.format)), adds: addsUp(answers.total, title(proposal.over.format), foldsEvery(proposal.over)) },
+      }
     case 'NOTHING':
-      return proposal.reason
+      return proposal.said
   }
 }
 
@@ -688,31 +692,45 @@ export function headlineOf(
  * is a window that quietly reads as if nothing were wrong (D-138).
  */
 export function edgeHeadline(edge: Edge, declarations: readonly FormatDeclaration[]): string {
+  return english(edgeHeadlineSaid(edge, declarations))
+}
+
+/** `edgeHeadline` as a screen says it (M64 F35). */
+export function edgeHeadlineSaid(edge: Edge, declarations: readonly FormatDeclaration[]): Spoken {
+  const gone = edgeGone(edge, declarations)
+  if (gone !== undefined) return { key: 'connections.said.end', parts: { said: gone } }
   const title = titleIn(declarations)
   const index = new Map(declarations.map((each) => [each.name, each]))
-
   if (edge.kind === 'LINK') {
-    if (edge.dangling) {
-      return (
-        `Each ${nounOf(title(edge.format))} belonged to one ${nounOf(title(edge.target))}, ` +
-        `but there is no ${title(edge.target)} format now.`
-      )
-    }
     const column = index.get(edge.format)?.columns.find((each) => each.name === edge.column)
     // A link found by its date says how; any other says which column, and how many (M54 F3).
-    if (column?.foundBy?.grain !== undefined || column === undefined) return `${belongs(title(edge.format), title(edge.target), column?.foundBy?.grain)}.`
-    return `${linkSaid(title(edge.format), column, title(edge.target))}.`
-  }
-
-  const many = pluralOf(title(edge.over.format))
-  const every = foldsEvery(edge.over)
-  if (edge.dangling) {
-    return every
-      ? `${title(edge.format)}’s ${edge.figure} adds up every ${nounOf(title(edge.over.format))}, but there is no ${title(edge.over.format)} format now.`
-      : `${title(edge.format)}’s ${edge.figure} adds up ${many}, but ${many} no longer belong to ${pluralOf(title(edge.format))}.`
+    const said =
+      column?.foundBy?.grain !== undefined || column === undefined
+        ? belongs(title(edge.format), title(edge.target), column?.foundBy?.grain)
+        : linkSpoken(title(edge.format), column, title(edge.target))
+    return { key: 'connections.said.end', parts: { said } }
   }
   const held = index.get(edge.format)?.aggregates.find((each) => each.name === edge.figure)
-  return `Each ${nounOf(title(edge.format))} ${addsUp(held === undefined ? undefined : { kind: held.kind, name: held.name }, title(edge.over.format), every)}.`
+  return {
+    key: 'connections.said.eachAdds',
+    parts: {
+      ...named('one', title(edge.format)),
+      adds: addsUp(held === undefined ? undefined : { kind: held.kind, name: held.name }, title(edge.over.format), foldsEvery(edge.over)),
+    },
+  }
+}
+
+/** What a dangling connection costs, with no full stop — or nothing when it is whole. */
+function edgeGone(edge: Edge, declarations: readonly FormatDeclaration[]): Spoken | undefined {
+  if (!edge.dangling) return undefined
+  const title = titleIn(declarations)
+  if (edge.kind === 'LINK') {
+    return { key: 'connections.said.goneLink', parts: { ...named('many', title(edge.format)), ...named('one', title(edge.target)) } }
+  }
+  return {
+    key: foldsEvery(edge.over) ? 'connections.said.goneEvery' : 'connections.said.goneIts',
+    parts: { ...named('owner', title(edge.format)), figure: edge.figure, ...named('many', title(edge.over.format)) },
+  }
 }
 
 /**
@@ -724,35 +742,37 @@ export function edgeWords(
   edge: Edge,
   declarations: readonly FormatDeclaration[],
 ): { readonly says: string; readonly under: string } {
+  const said = edgeSaid(edge, declarations)
+  return { says: english(said.says), under: english(said.under) }
+}
+
+/** `edgeWords` as a screen says it (M64 F35). */
+export function edgeSaid(edge: Edge, declarations: readonly FormatDeclaration[]): { readonly says: Spoken; readonly under: Spoken } {
   const title = titleIn(declarations)
-  if (edge.dangling) {
-    return {
-      says: edgeHeadline(edge, declarations).replace(/\.$/, ''),
-      under: edge.kind === 'LINK' ? `${nounOf(title(edge.format))}’s ${edge.column.replace(/_/g, ' ')} column` : 'computed each time, not stored',
-    }
-  }
+  const under: Spoken =
+    edge.kind === 'LINK'
+      ? { key: 'connections.said.columnOf', parts: { ...named('many', title(edge.format)), column: edge.column.replace(/_/g, ' ') } }
+      : { key: 'connections.said.computed' }
+  const gone = edgeGone(edge, declarations)
+  if (gone !== undefined) return { says: gone, under }
   if (edge.kind === 'LINK') {
     const column = declarations.find((each) => each.name === edge.format)?.columns.find((each) => each.name === edge.column)
-    return {
-      says: linkSaid(title(edge.format), column ?? { name: edge.column, type: 'link' }, title(edge.target)),
-      under: `${nounOf(title(edge.format))}’s ${edge.column.replace(/_/g, ' ')} column`,
-    }
+    return { says: linkSpoken(title(edge.format), column ?? { name: edge.column, type: 'link' }, title(edge.target)), under }
   }
   return {
-    says: foldsEvery(edge.over)
-      ? `${title(edge.format)} adds up ${edge.figure} from every ${nounOf(title(edge.over.format))}`
-      : `${title(edge.format)} adds up ${edge.figure} from its ${pluralOf(title(edge.over.format))}`,
-    under: 'computed each time, not stored',
+    says: {
+      key: foldsEvery(edge.over) ? 'connections.said.figureFromEvery' : 'connections.said.figureFromIts',
+      parts: { ...named('owner', title(edge.format)), figure: edge.figure, ...named('many', title(edge.over.format)) },
+    },
+    under,
   }
 }
 
 /** *Each work day belongs to one paycheck* — or to the one its date falls in. */
-function belongs(many: string, one: string, found: FoundGrain | undefined): string {
-  const each = `Each ${nounOf(many)}`
-  if (found === undefined) return `${each} belongs to one ${nounOf(one)}`
-  return found === 'DAY'
-    ? `${each} belongs to the ${nounOf(one)} of the same day`
-    : `${each} belongs to the ${nounOf(one)} of its month`
+function belongs(many: string, one: string, found: FoundGrain | undefined): Spoken {
+  const parts = { ...named('many', many), ...named('one', one) }
+  if (found === undefined) return { key: 'connections.said.belongsOne', parts }
+  return { key: found === 'DAY' ? 'connections.said.belongsDay' : 'connections.said.belongsMonth', parts }
 }
 
 /** What a total does with the rows that belong to it, as a verb phrase. */
@@ -760,22 +780,22 @@ function addsUp(
   total: { readonly kind: AggregateKind; readonly name: string } | undefined,
   many: string,
   every = false,
-): string {
+): Spoken {
   // *Every course*, not *its courses*: no course belongs to a degree (D-397).
-  const rows = every ? `every ${nounOf(many)}` : `its ${pluralOf(many)}`
-  if (total === undefined) return `adds up ${rows}`
+  const rows: Spoken = { key: every ? 'connections.said.every' : 'connections.said.its', parts: named('many', many) }
+  if (total === undefined) return { key: 'connections.said.addsUp', parts: { rows } }
   const name = total.name.trim()
-  if (total.kind === 'COUNT') return `counts ${rows}`
-  if (name === '') return `adds up ${rows}`
-  if (total.kind === 'SUM') return `adds up the ${name} of ${rows}`
-  return `shows the ${kindWord(total.kind)} ${name} of ${rows}`
+  if (total.kind === 'COUNT') return { key: 'connections.said.counts', parts: { rows } }
+  if (name === '') return { key: 'connections.said.addsUp', parts: { rows } }
+  if (total.kind === 'SUM') return { key: 'connections.said.addsUpThe', parts: { rows, name } }
+  return { key: 'connections.said.shows', parts: { rows, name, kind: { key: `connections.total.kinds.${kindWord(total.kind)}` } } }
 }
 
 /**
  * A kind of total, in the window's words: *smallest* and *largest*, where the
  * declaration says `minimum` and `maximum`.
  */
-export function kindWord(kind: AggregateKind): string {
+export function kindWord(kind: AggregateKind): KindWord {
   switch (kind) {
     case 'SUM':
       return 'sum'
@@ -792,6 +812,129 @@ export function kindWord(kind: AggregateKind): string {
     case 'EARLIEST':
       return 'earliest'
   }
+}
+
+/* ------------------------------------------------------- the words, by key */
+
+/** A kind of total's word (`kindWord`). */
+export type KindWord = 'sum' | 'count' | 'average' | 'smallest' | 'largest' | 'latest' | 'earliest'
+
+/**
+ * The sentences this file says, by name (M64 F35, as D-632's `Said`): each a
+ * key in `connections.said` of the catalogue, whose English is `SAID_ENGLISH`
+ * below — the same words, so a conversation and a screen in English read one
+ * sentence; `src/i18n/connectionsSaid.test.ts` fails when the two drift.
+ */
+const SAID_ENGLISH = {
+  plain: '{said}',
+  end: '{said}.',
+  belongsOne: 'Each {many} belongs to one {one}',
+  belongsDay: 'Each {many} belongs to the {one} of the same day',
+  belongsMonth: 'Each {many} belongs to the {one} of its month',
+  namesOne: 'Each {many} names one {one} in {column}',
+  namesAny: 'Each {many} names any number of {oneRows} in {column}',
+  through: '{head}, through {column}. What {column} holds now is replaced.',
+  instead: 'Each {many} will belong to one {one} instead of one {was}.',
+  insteadTotals: 'Each {many} will belong to one {one} instead of one {was}. Totals through it change too.',
+  andAdds: '{head}, and each {one} {adds}.',
+  eachAdds: 'Each {one} {adds}.',
+  every: 'every {many}',
+  its: 'its {manyRows}',
+  addsUp: 'adds up {rows}',
+  counts: 'counts {rows}',
+  addsUpThe: 'adds up the {name} of {rows}',
+  shows: 'shows the {kind} {name} of {rows}',
+  goneLink: 'Each {many} belonged to one {one}, but there is no {One} format now',
+  goneEvery: '{Owner}’s {figure} adds up every {many}, but there is no {Many} format now',
+  goneIts: '{Owner}’s {figure} adds up {manyRows}, but {manyRows} no longer belong to {ownerRows}',
+  figureFromEvery: '{Owner} adds up {figure} from every {many}',
+  figureFromIts: '{Owner} adds up {figure} from its {manyRows}',
+  columnOf: '{many}’s {column} column',
+  computed: 'computed each time, not stored',
+  same: 'Those two are the same. Drag {words} onto another format.',
+  noFormat: 'There is no {Format} format.',
+  noColumn: '{Format} has no column called {column}.',
+  already: '{column} already connects each {many} to a {one}.',
+  notLink: '{column} isn’t a connection. Drop it on the whole format, or on a column that is.',
+  elsewhere: '{column} connects {manyRows} to {Target}, not to {One}.',
+  ways: '{ManyRows} belong to a {one} in {ways}. Drop it on the one to add up.',
+  twoWays: 'two ways',
+  nWays: '{count} ways',
+  fromMany: 'Drag {words} from the format there are many of.',
+  fromManyWhy: 'Two whole formats don’t say which one has many of the other.',
+  press: 'Press {figure} to change it.',
+  noConnect: 'Those two don’t connect. Drag {words} onto another format.',
+  port: '{column} — {type}. Drag onto a format to make it a connection.',
+  portIn: '{column} — {type}, in {unit}. Drag onto a format to make it a connection.',
+  oneOf: 'one {One}',
+  manyOf: 'many {oneRows}',
+  fromEvery: 'from every {many}',
+  fromRows: 'from {manyRows}',
+  figureEvery: '{figure} adds up every {many}.',
+  figureIts: '{figure} adds up its {manyRows}.',
+  type: {
+    text: 'text',
+    integer: 'a number',
+    real: 'a number',
+    decimal: 'a number',
+    percent: 'a percentage',
+    date: 'a date',
+    month: 'a month',
+    instant: 'a moment',
+    time: 'a time of day',
+    boolean: 'yes or no',
+    enum: 'one of a list',
+    money: 'money',
+    quantity: 'an amount with its unit',
+    link: 'a connection',
+    links: 'a list of rows',
+    elsewhere: 'a row in another document',
+    file: 'a file',
+    enums: 'several of a list',
+  } satisfies Record<ColumnType, string>,
+} as const
+
+/** The English of `connections.said`, for the test that keeps the catalogue's the same. */
+export const CONNECTION_SAID_ENGLISH = SAID_ENGLISH
+
+type SaidName = Exclude<keyof typeof SAID_ENGLISH, 'type'> | `type.${ColumnType}`
+
+/** A key this file says a sentence with — a literal the catalogue holds (`boundary.test.ts`: no import from `src/i18n`). */
+export type ConnectionKey = `connections.said.${SaidName}` | `connections.total.kinds.${KindWord}` | 'connections.belongsTo'
+
+/**
+ * **A sentence as a screen says it, with sentences inside it** (M64 F35): view.ts's
+ * `Said`, whose parts may be said themselves — *Each {one} {adds}*, where
+ * *adds* is a phrase of its own. A screen says it with `spoken(t, …)`.
+ */
+export interface Spoken {
+  readonly key: ConnectionKey
+  readonly parts?: Readonly<Record<string, string | number | Spoken>>
+}
+
+/** A format's title in a sentence's four shapes: `{Many}` the title, `{many}` its noun, `{manyRows}` and `{ManyRows}` its plural. */
+function named(role: string, title: string): Record<string, string> {
+  const Role = role.charAt(0).toUpperCase() + role.slice(1)
+  const rows = pluralOf(title)
+  return { [Role]: title, [role]: nounOf(title), [`${role}Rows`]: rows, [`${Role}Rows`]: capitalize(rows) }
+}
+
+/** A spoken sentence in English — what a conversation reads. */
+export function english(said: Spoken): string {
+  const name = said.key.slice(said.key.lastIndexOf('.') + 1)
+  const template =
+    said.key === 'connections.belongsTo'
+      ? NEW_LINK_WORDS
+      : said.key.startsWith('connections.total.kinds.')
+        ? name
+        : said.key.startsWith('connections.said.type.')
+          ? SAID_ENGLISH.type[name as ColumnType]
+          : SAID_ENGLISH[name as Exclude<SaidName, `type.${string}`>]
+  return template.replace(/\{(\w+)\}/g, (whole, part: string) => {
+    const value = said.parts?.[part]
+    if (value === undefined) return whole
+    return typeof value === 'object' ? english(value) : String(value)
+  })
 }
 
 /* ------------------------------------------------------------ the two names */

@@ -77,6 +77,14 @@ export const views: Translation<'views'> = {
     dueBy: 'מועד לפי',
     line: 'שורה',
     lineMenu: 'שורה: אחרי הכותרת',
+    quick: {
+      one: '{title}',
+      add: 'הוספה: {one}',
+      addWith: 'הוספה: {one} · {words}',
+      joiner: ', ',
+      date: '{column} {due}',
+      not: 'בלי {column}',
+    },
     groups: {
       late: 'באיחור',
       beforeToday: 'לפני היום',

@@ -21,6 +21,7 @@ import { CurrencyField } from '@/ui/formats/TypedField.tsx'
 import { COMMON_TYPES, isCommonType, MORE_TYPES } from '@/ui/formats/typePicker.ts'
 import { formatsByPack, useKeptPacks } from '@/ui/packs.ts'
 import { useT } from '@/i18n/current.ts'
+import type { MessageKey } from '@/i18n/catalogue.ts'
 
 /**
  * The document's currency and the way to choose it (M29 F3, D-344): asked on a
@@ -124,9 +125,9 @@ export function ColumnQuestions({
     >
       <span className="flex items-center gap-2">
         <TypeGlyph type={each} className="h-4 w-4 shrink-0 text-ink-secondary" />
-        <span>{TYPE_WORDS[each].shown}</span>
+        <span>{t(`formats.type.${each}.shown`)}</span>
       </span>
-      <span className="text-caption text-ink-secondary">{TYPE_WORDS[each].gloss}</span>
+      <span className="text-caption text-ink-secondary">{t(`formats.type.${each}.gloss`)}</span>
     </button>
   )
   // A person's own formats first, then each pack's under its name (M33 F3).
@@ -157,7 +158,7 @@ export function ColumnQuestions({
           <span className="flex items-center gap-2 pb-1">
             <TypeGlyph type={column.type} className="h-4 w-4 shrink-0 text-ink-secondary" />
             {/* The person's word; the word the declaration keeps is the tooltip (D-539). */}
-            <span title={t('formats.column.storedAs', { type: column.type })}>{TYPE_WORDS[column.type].shown}</span>
+            <span title={t('formats.column.storedAs', { type: column.type })}>{t(`formats.type.${column.type}.shown`)}</span>
             <Button
               size="sm"
               variant="ghost"
@@ -186,8 +187,8 @@ export function ColumnQuestions({
             </Button>
           </div>
           {MORE_TYPES.map((group, at) => (
-            <section key={group.heading} aria-label={group.heading} className="mt-3">
-              <h3 className="text-label text-ink-secondary uppercase">{group.heading}</h3>
+            <section key={group.group} aria-label={t(`formats.typeGroup.${group.group}`)} className="mt-3">
+              <h3 className="text-label text-ink-secondary uppercase">{t(`formats.typeGroup.${group.group}`)}</h3>
               <div className="mt-1 grid grid-cols-2 gap-1 sm:grid-cols-4">
                 {group.types.map((each, place) => tile(each, at === 0 && place === 0 ? firstMore : undefined))}
               </div>
@@ -235,8 +236,8 @@ export function ColumnQuestions({
         </div>
       ) : (
         <div key="details" className="fc-view-enter mt-3 flex flex-wrap items-end gap-3">
-          {TYPE_WORDS[column.type].catch !== undefined && (
-            <p className="w-full text-caption text-ink-tertiary">{TYPE_WORDS[column.type].catch}</p>
+          {typeCatchKey(column.type) !== undefined && (
+            <p className="w-full text-caption text-ink-tertiary">{t(typeCatchKey(column.type) ?? 'formats.type.money.catch')}</p>
           )}
 
           {column.type === 'link' && (
@@ -401,7 +402,7 @@ function UnitsKnown({ units }: { units: UnitTable }) {
       <dl className="mt-1 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
         {groups.map((group) => (
           <div key={group.dimension} className="contents">
-            <dt className="text-ink-tertiary lowercase">{group.dimension}</dt>
+            <dt className="text-ink-tertiary">{t(`formats.dimension.${group.dimension}`)}</dt>
             <dd className="font-mono">{group.symbols.join('  ')}</dd>
           </div>
         ))}
@@ -449,4 +450,9 @@ function CurrencyQuestion({ currency }: { currency: DocumentCurrency }) {
       />
     </Field>
   )
+}
+
+/** A type's surprise by its catalogue key, where `TYPE_WORDS` has one (M64 F37). */
+function typeCatchKey(type: ColumnType): MessageKey | undefined {
+  return TYPE_WORDS[type].catch === undefined ? undefined : (`formats.type.${type}.catch` as MessageKey)
 }

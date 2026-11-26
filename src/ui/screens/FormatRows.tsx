@@ -148,7 +148,7 @@ import { choicesOf, InputView, type InputLine } from '@/ui/formats/InputView.tsx
 import { draftShape, inputViewName, keptSentence } from '@/ui/formats/inputForm.ts'
 import { FormatPlus } from '@/ui/formats/FormatPlus.tsx'
 import { ChartForm, newChart, newView, ViewForm, type ChartMaking, type ViewMaking } from '@/ui/formats/MakeBlock.tsx'
-import { ListPage, type QuickChoice } from '@/ui/formats/ListView.tsx'
+import { ListPage, quickAddWords, type QuickChoice } from '@/ui/formats/ListView.tsx'
 import { groupKeyOf, listOrder, listPicture, quickAdd, quickFieldsOf, type ListLine, type ListPicture } from '@/ui/formats/listView.ts'
 import { entryLinked, entryLinks } from '@/data/repositories/formatLinkViewRepository.ts'
 import { figureOf, isPercentFigure } from '@/ui/formats/EntryValue.tsx'
@@ -162,7 +162,7 @@ import type { Database } from 'sql.js'
 import { ReadersLine } from '@/ui/formats/ReadersLine.tsx'
 import { DeletedNote, type DeleteRefusal } from '@/ui/formats/DeleteAtOnce.tsx'
 import { useJustDeleted, type JustDeleted } from '@/ui/formats/justDeleted.ts'
-import { useT, type Translate } from '@/i18n/current.ts'
+import { useDates, useT, type Translate } from '@/i18n/current.ts'
 import { countKey } from '@/i18n/count.ts'
 import { Phrase } from '@/ui/components/Phrase.tsx'
 import { SidePanel } from '@/ui/components/SidePanel.tsx'
@@ -282,6 +282,7 @@ export function FormatRows({
   // **A row deleted at once, with its Undo** (M64 U13, D-625): kept beyond this
   // route, since deleting the last entry a filter holds goes back to the table.
   const t = useT()
+  const dates = useDates()
   const justDeleted = useJustDeleted((state) => state.deleted)
   const keepDeleted = useJustDeleted((state) => state.keep)
   const takeDeleted = useJustDeleted((state) => state.take)
@@ -558,10 +559,10 @@ export function FormatRows({
       // What names it, one hop — the page's, before the two were one (D-401).
       named: entryLinks(db, declaration, data.declarations, row.id),
       // What its own links name, for a card or a list to draw (D-402).
-      linked: linkedRows(db, declaration, data.declarations, row),
+      linked: linkedRows(db, declaration, data.declarations, row, t),
     }
     // `came` is made again each render; what it prefills is the dependency.
-  }, [db, entry, data, typed, filter, came?.from === 'read' ? JSON.stringify(came.prefill) : ''])
+  }, [db, entry, data, typed, filter, t, came?.from === 'read' ? JSON.stringify(came.prefill) : ''])
 
   /**
    * The draft, coerced — on every keystroke, because a refusal is useful while
@@ -976,8 +977,12 @@ export function FormatRows({
 
   /** Quick add's placeholder for a group, naming every value the row will take but those its fields ask. */
   const placeholderOf = (picture: ListPicture, group: ListGroup<ListLine> | undefined): string =>
-    quickAdd(declaration, picture.shape, group?.implies ?? {}, filter, toISODate(today()), picture.names, undefined, undefined, inputDefaults(db, declaration, toISODate(today())), quickAsked)
-      .placeholder
+    quickAddWords(
+      t,
+      dates,
+      declaration.title,
+      quickAdd(declaration, picture.shape, group?.implies ?? {}, filter, toISODate(today()), picture.names, undefined, undefined, inputDefaults(db, declaration, toISODate(today())), quickAsked),
+    )
 
   /**
    * **Quick add's fields** (M55 U4, D-535): the default input view's asked
@@ -2388,10 +2393,11 @@ function linkedRows(
   declaration: FormatDeclaration,
   declarations: readonly FormatDeclaration[],
   row: StoredRow,
+  t: Translate,
 ): ReadonlyMap<string, LinkedRow> {
   const lines = entryLinked(db, declaration, declarations, row)
-  const labels = new Map([...lines].map(([id, line]) => [id, linkedRowOf(line, new Map()).name]))
-  return new Map([...lines].map(([id, line]) => [id, linkedRowOf(line, labels)]))
+  const labels = new Map([...lines].map(([id, line]) => [id, linkedRowOf(line, new Map(), t).name]))
+  return new Map([...lines].map(([id, line]) => [id, linkedRowOf(line, labels, t)]))
 }
 
 /** A problem with an entry, at its field — or about the row, when `column` is nothing (M55 U5, D-545). */

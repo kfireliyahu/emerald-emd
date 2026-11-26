@@ -368,7 +368,7 @@ describe('what a drag means', () => {
   it('refuses a bubble on a bubble and names what to drag instead', () => {
     const proposal = proposalFor(row('recipe'), row('recipe_line'), VAULT)
     expect(proposal.kind).toBe('NOTHING')
-    expect(proposal).toEqual({
+    expect(proposal).toMatchObject({
       kind: 'NOTHING',
       reason: 'Drag belongs to one… from the format there are many of.',
       detail: 'Two whole formats don’t say which one has many of the other.',
@@ -376,7 +376,7 @@ describe('what a drag means', () => {
   })
 
   it('refuses the same endpoint twice', () => {
-    expect(proposalFor(row('recipe'), row('recipe'), VAULT)).toEqual({
+    expect(proposalFor(row('recipe'), row('recipe'), VAULT)).toMatchObject({
       kind: 'NOTHING',
       reason: 'Those two are the same. Drag belongs to one… onto another format.',
     })

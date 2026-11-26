@@ -8,6 +8,7 @@ import { heldExactly } from '@/domain/format/inputView.ts'
 import { blankDraft, type RowDraft } from '@/domain/format/rowDraft.ts'
 import {
   dueBucket,
+  dueSaid,
   dueText,
   entryDefaults,
   entryLabel,
@@ -16,8 +17,10 @@ import {
   listGroups,
   listOf,
   withArticle,
+  type DueKey,
   type ListGroup,
   type ListShape,
+  type Said,
 } from '@/domain/format/view.ts'
 import { valueText } from '@/ui/formats/entryList.ts'
 
@@ -33,7 +36,16 @@ import { valueText } from '@/ui/formats/entryList.ts'
 export type LineCell =
   | { readonly kind: 'chips'; readonly column: string; readonly members: readonly string[] }
   | { readonly kind: 'member'; readonly column: string; readonly member: string }
-  | { readonly kind: 'date'; readonly column: string; readonly text: string; readonly late: boolean; readonly long: string }
+  | {
+      readonly kind: 'date'
+      readonly column: string
+      /** `dueText`'s English, as a conversation reads it. */
+      readonly text: string
+      /** The same words by key (M64 F37): the screen fills the weekday, the date and the year from `long`. */
+      readonly said: Said<DueKey>
+      readonly late: boolean
+      readonly long: string
+    }
   | { readonly kind: 'text'; readonly column: string; readonly text: string; readonly link: boolean }
 
 /** One row as a line of the list. */
@@ -137,8 +149,11 @@ function cellOf(
     return typeof value === 'string' && value !== '' ? [{ kind: 'member', column: column.name, member: value }] : []
   }
   if (column.type === 'date' && typeof value === 'string' && value !== '') {
-    const said = dueText(value, day, ticked)
-    return said === undefined ? [] : [{ kind: 'date', column: column.name, text: said.text, late: said.late, long: value }]
+    const english = dueText(value, day, ticked)
+    const said = dueSaid(value, day, ticked)
+    return english === undefined || said === undefined
+      ? []
+      : [{ kind: 'date', column: column.name, text: english.text, said: said.said, late: said.late, long: value }]
   }
   const text = valueText(column, row, labels)
   return text === '' ? [] : [{ kind: 'text', column: column.name, text, link: column.type === 'link' }]
@@ -164,12 +179,24 @@ export function filterImplies(
   return heldExactly(declaration, filter.match, day)
 }
 
+/**
+ * One value quick add's placeholder names (M64 F37): a member or a link's row
+ * as the document writes it, a date as `dueSaid` says it, a yes-or-no column
+ * by its name — the screen says each in its own words.
+ */
+export type QuickWord =
+  | { readonly kind: 'value'; readonly text: string }
+  | { readonly kind: 'date'; readonly column: string; readonly said: Said<DueKey>; readonly long: string }
+  | { readonly kind: 'yes' | 'no'; readonly column: string }
+
 /** What a row added in place starts as, and the words its line's placeholder names. */
 export interface QuickAdd {
   /** The draft with every value but the title — what entry/new opens with when it cannot be written. */
   readonly draft: RowDraft
-  /** The placeholder: *Add a task · inbox, Garden shed*. */
+  /** The placeholder in English, as a conversation would read it: *Add a task · inbox, Garden shed*. */
   readonly placeholder: string
+  /** The values the placeholder names, for a screen to say them (M64 F37). */
+  readonly words: readonly QuickWord[]
   /** The required columns nothing fills, besides the title. */
   readonly missing: readonly string[]
 }
@@ -204,20 +231,33 @@ export function quickAdd(
   const draft: Record<string, string> = { ...blankDraft(declaration, previous, currency), ...set }
   // What the line types: the view's asked fields where it has some, else the title.
   const typed = (column: ColumnDeclaration): boolean => (asked.length > 0 ? asked.includes(column.name) : column === shape.name)
-  const words = declaration.columns.flatMap((column) => {
+  const said = declaration.columns.flatMap((column): QuickWord[] => {
     const value = set[column.name]
     if (value === undefined || value === '' || typed(column)) return []
     const label = column.name.replace(/_/g, ' ')
-    if (column.type === 'enum') return [value.replace(/_/g, ' ')]
-    if (column.type === 'link') return [names.get(value) ?? value]
-    if (column.type === 'date') return [`${label} ${dueText(value, day, false)?.text ?? value}`]
-    if (column.type === 'boolean') return [value === 'true' ? label : `not ${label}`]
-    return [value]
+    if (column.type === 'enum') return [{ kind: 'value', text: value.replace(/_/g, ' ') }]
+    if (column.type === 'link') return [{ kind: 'value', text: names.get(value) ?? value }]
+    if (column.type === 'date') {
+      const due = dueSaid(value, day, false)
+      return [due === undefined ? { kind: 'value', text: `${label} ${value}` } : { kind: 'date', column: label, said: due.said, long: value }]
+    }
+    if (column.type === 'boolean') return [{ kind: value === 'true' ? 'yes' : 'no', column: label }]
+    return [{ kind: 'value', text: value }]
   })
+  const words = said.map((word) =>
+    word.kind === 'value'
+      ? word.text
+      : word.kind === 'date'
+        ? `${word.column} ${dueText(word.long, day, false)?.text ?? word.long}`
+        : word.kind === 'yes'
+          ? word.column
+          : `not ${word.column}`,
+  )
   const one = withArticle(declaration.title.toLowerCase())
   return {
     draft,
     placeholder: words.length === 0 ? `Add ${one}` : `Add ${one} · ${words.join(', ')}`,
+    words: said,
     missing: declaration.columns
       .filter((column) => column.required && !typed(column) && (draft[column.name] ?? '').trim() === '')
       .map((column) => column.name),
