@@ -190,15 +190,15 @@
       "screens": 1.8
     },
     "#/formats": {
-      "words": 76,
-      "blocks": 2,
+      "words": 45,
+      "blocks": 1,
       "figures": 0,
-      "actions": 25,
+      "actions": 22,
       "colours": 6,
       "screens": 1.0
     },
     "#/formats/card_charge": {
-      "words": 63,
+      "words": 56,
       "blocks": 1,
       "figures": 0,
       "actions": 30,
@@ -206,11 +206,11 @@
       "screens": 1.0
     },
     "#/formats/unit": {
-      "words": 240,
+      "words": 238,
       "blocks": 1,
       "figures": 0,
       "actions": 99,
-      "colours": 10,
+      "colours": 9,
       "screens": 1.0
     },
     "#/formats/card_charge/entry/new": {
@@ -314,11 +314,6 @@
     "#/year",
     "#/categories",
     "#/categories/rules",
-    "#/formats",
-    "#/formats/card_charge",
-    "#/formats/unit",
-    "#/formats/card_charge/entry/new",
-    "#/formats/card_charge/input",
     "#/formats/unit/board",
     "#/formats/card_charge/list",
     "#/formats/unit/list",

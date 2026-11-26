@@ -34,7 +34,7 @@ const UNDERIVED = 'Only a column not saved yet can be. Press + for a new one.'
  * do, why is it all over the place and why do we need it?"* — and then, on the
  * separate Edit screen the brief planned: *"won't the user edit directly on the
  * sheet? … perhaps no need for a separate edit."* So there is neither. A
- * column's header opens this under the sheet on that column; the `+` after
+ * column's header opens this beside the sheet on that column (M64 U13; a new format's editor still has it under); the `+` after
  * the last header opens it on a new one; the *Claims* band opens it on the claims (M29 U1, M33 U3a).
  *
  * **It writes nothing until Save, and says first what Save would do to the
@@ -68,6 +68,7 @@ export function ShapePanel({
   onSave,
   onCancel,
   onCopy,
+  docked,
 }: {
   draft: FormatDraft
   focus: ShapeFocus
@@ -99,6 +100,12 @@ export function ShapePanel({
   onCancel: () => void
   /** Copy the declaration as a `.format.md`, for a diff or a conversation. */
   onCopy?: (() => void) | undefined
+  /**
+   * Drawn inside the `SidePanel` beside a format's rows (M64 U13, D-625), which
+   * is its frame — no band of its own at the foot of the screen. A new format's
+   * editor still draws it under its sheet.
+   */
+  docked?: boolean | undefined
 }) {
   const column =
     focus.kind === 'COLUMN' ? draft.columns.find((each) => each.key === focus.key) : undefined
@@ -146,7 +153,7 @@ export function ShapePanel({
 
   return (
     <div
-      className="max-h-[60vh] shrink-0 overflow-auto border-t border-hairline bg-elevated px-6 py-4"
+      className={docked === true ? '' : 'max-h-[60vh] shrink-0 overflow-auto border-t border-hairline bg-elevated px-6 py-4'}
       onKeyDown={(event) => {
         // Not while making one: Escape would throw the whole format away.
         if (event.key === 'Escape' && creating === undefined) {

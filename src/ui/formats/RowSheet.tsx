@@ -29,6 +29,7 @@ import { IconAction } from '@/ui/components/IconAction.tsx'
 import { defaultWidth, ResizeHandle } from './ResizeHandle.tsx'
 import { cellText, linkChoice, LinkMakerContext, memberWords, NewLinkForm, type LinkChoice, type Making } from '@/ui/formats/EntryView.tsx'
 import { useRowCursor } from '@/ui/useRowCursor.ts'
+import { DeleteAtOnce, type DeleteRefusal } from '@/ui/formats/DeleteAtOnce.tsx'
 import { Conversation, selects } from '@/ui/formats/conversation.ts'
 import type { SheetMark } from '@/ui/formats/shape.ts'
 import { Flip } from '@/ui/motion/Flip.tsx'
@@ -100,6 +101,7 @@ export function RowSheet({
   onWidth,
   onOpen,
   onDelete,
+  deleteLabel,
   onShape,
   onAddColumn,
   onMove,
@@ -125,8 +127,14 @@ export function RowSheet({
    */
   onWidth: ((column: string, width: number | undefined) => void) | undefined
   onOpen: ((row: StoredRow) => void) | undefined
-  onDelete: ((row: StoredRow) => void) | undefined
-  /** Open a column's name, type and checks under the sheet (M26 U3). */
+  /**
+   * Delete a row at once (M64 U13, D-625): nothing back when it went, the
+   * refusal when it may not — said at the row's own Delete.
+   */
+  onDelete: ((row: StoredRow) => DeleteRefusal | undefined) | undefined
+  /** The row's Delete, named: `Delete Book Nook`. */
+  deleteLabel?: ((row: StoredRow) => string) | undefined
+  /** Open a column's name, type and checks beside the sheet (M26 U3). */
   onShape: ((column: string) => void) | undefined
   /** The `+` after the last column: a new one, asked the same questions. */
   onAddColumn: (() => void) | undefined
@@ -136,7 +144,7 @@ export function RowSheet({
    * the order is not this sheet's to change.
    */
   onMove?: ((column: string, before: string | undefined) => void) | undefined
-  /** Open a worked-out column's expression under the sheet (M29 U3b, D-334). */
+  /** Open a worked-out column's expression beside the sheet (M29 U3b, D-334). */
   onShapeDerived?: ((name: string) => void) | undefined
   /**
    * The one header the panel underneath is open on, and no other (M29 F4,
@@ -176,16 +184,29 @@ export function RowSheet({
       const row = rows[index]?.row
       if (row !== undefined) onOpen?.(row)
     },
-    ...(selection === undefined
-      ? {}
-      : {
-          keys: {
+    keys: {
+      // **Delete deletes the cursor's row** (M64 U13, D-625), as its own
+      // Delete does — a refusal opens there, at the row.
+      ...(onDelete === undefined
+        ? {}
+        : {
+            delete: (index: number) => {
+              const row = rows[index]?.row
+              if (row === undefined) return
+              document
+                .querySelector<HTMLButtonElement>(`[data-delete-row="${CSS.escape(row.id)}"] button`)
+                ?.click()
+            },
+          }),
+      ...(selection === undefined
+        ? {}
+        : {
             x: (index: number) => {
               const row = rows[index]?.row
               if (row !== undefined) selection.toggle(declaration, row)
             },
-          },
-        }),
+          }),
+    },
   })
   // The width under a drag, drawn live and written once, on release: one
   // write per drag rather than one per pixel, each of which would dirty the
@@ -459,7 +480,7 @@ export function RowSheet({
             ))}
             {/* **A worked-out column is read, never typed** (M29 U3b, D-334):
                 its header says what it works out under a pointer, and opens
-                that expression under the sheet. **Sorted like a typed one**
+                that expression beside the sheet. **Sorted like a typed one**
                 (M49 U1, D-471), by the SQL its view is — a computed date is a
                 list's order. **Greyer than a typed one, and resized like one**
                 (M29 F5, D-346): nobody could tell it computed, nor widen it. */}
@@ -661,20 +682,10 @@ export function RowSheet({
                   </IconAction>
                 )}
                 {onDelete !== undefined && (
-                  <span className="opacity-0 transition-opacity duration-[var(--duration-micro)] group-hover:opacity-100 focus-within:opacity-100">
-                    <IconAction
-                      label="Delete"
-                      tone="negative"
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        onDelete(row)
-                      }}
-                    >
-                      <path d="M4 7h16" />
-                      <path d="M10 11v6M14 11v6" />
-                      <path d="M6 7l1 13h10l1-13" />
-                      <path d="M9 7V4h6v3" />
-                    </IconAction>
+                  // **At once, with its Undo in the screen's line** (M64 U13, D-625);
+                  // a refusal opens here, at the row, never at the foot of the screen.
+                  <span data-delete-row={row.id} className="inline-flex">
+                    <DeleteAtOnce reveal label={deleteLabel?.(row) ?? 'Delete'} onDelete={() => onDelete(row)} />
                   </span>
                 )}
               </td>

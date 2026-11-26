@@ -26,6 +26,8 @@ const REVIEWED = [
   'src/ui/formats/EntryValue.tsx',
   'src/ui/formats/EntryList.tsx',
   'src/ui/formats/RowSheet.tsx',
+  // M64 U13 (D-625): a row's delete at once, and its refusal at the button.
+  'src/ui/formats/DeleteAtOnce.tsx',
   'src/ui/formats/TypedField.tsx',
   'src/ui/formats/MembersField.tsx',
   'src/ui/formats/FormulaField.tsx',
@@ -412,7 +414,7 @@ describe('the formats and rows surface, swept (M54 F2)', () => {
   it('heads a format’s page with its title, and shows no table name', () => {
     for (const path of ['src/ui/screens/FormatRows.tsx', 'src/ui/screens/DeclaredFormats.tsx']) {
       const source = readFileSync(path, 'utf8')
-      expect(source).toMatch(/<h1 className="text-body font-medium/)
+      expect(source).toMatch(/<h1 className="m-0 text-title leading-tight font-medium/)
       expect(source).not.toContain('tableNameFor(')
     }
   })

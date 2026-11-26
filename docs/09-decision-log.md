@@ -517,12 +517,13 @@ written out here.
 | D-615 | 2026-11-25 | The report becomes the design language: A's tokens and two type steps, Plex in four weights, a rail of words whose sections' views are their tab strip, a kit of eight displays chosen by the shape of the data, a side panel and a waiting list, six ui rules rewritten and four added, and a density budget whose exempt list only shrinks | M64 |
 | D-616 | 2026-11-25 | Home is rebuilt as the report: the month in one sentence, left over its one figure, what waits one strip below it, four tiles that open their breakdowns beside the page, the fourteen months as the pager, and where it went beside the plan; All months and the by-month chart are the Year screen's, and a redesign-screen skill every later screen follows | M64 |
 | D-617 | 2026-11-25 | Where a screen's interactions open: reading more in the side panel, one value in place, a form of several fields in the same panel, a job of several steps on a page of its own with one way back, a choice in a popover, and a dialog only to confirm what cannot be undone | M64 |
-| D-620 | 2026-11-25 | Paychecks is rebuilt as the report: the month's paycheck in one sentence, net pay its one figure, the gross divided into taxes, funds, the rest and the net, each opening its lines beside the page (taxes by deduction type, month and year so far), what waits one strip below, net by month as the pager and every paycheck in a table; Deduction types reads as a table whose rows open their form beside it; a delete deletes at once with Undo where it happened, and the slip's form stays a page of its own | M64 |
 | D-618 | 2026-11-25 | Transactions is rebuilt as the report: each tab answers first in one sentence, its views are one tab strip, a row, a rule from a fix and what is left out open beside the rows, a selection acts from the table's own header row, and what was just done keeps its place with its Undo | M64 |
 | D-619 | 2026-11-25 | Reading files is the report: the batch said first in one sentence, Write in the list's own header row, a statement's gap beside the list rather than on a page, a removal undone where it was, a reader's delete asked at its button, the mapper's one way back at its head, and Readers one translated list | M64 |
+| D-620 | 2026-11-25 | Paychecks is rebuilt as the report: the month's paycheck in one sentence, net pay its one figure, the gross divided into taxes, funds, the rest and the net, each opening its lines beside the page (taxes by deduction type, month and year so far), what waits one strip below, net by month as the pager and every paycheck in a table; Deduction types reads as a table whose rows open their form beside it; a delete deletes at once with Undo where it happened, and the slip's form stays a page of its own | M64 |
 | D-621 | 2026-11-25 | Plan is rebuilt as the report: net pay and what the bills take first said as one sentence with whether every shekel has a job, to split its one figure, what waits one strip below it, the split's bar with each bucket held against a month, and the bills one row each with its one choice in place; a bucket, a bill, net pay, the cushion and the plan's months open beside the page | M64 |
 | D-622 | 2026-11-26 | Wealth is rebuilt as the report: net worth, funds, goals and debts each answer in one sentence with one display figure and the kit's display for their shape, what waits one list below, then one table whose rows open beside the page; fee impact, the deposit check, a net worth row and the goals' projection move into the side panel, and a removal asks in the row's own menu where no undo is honest | M64 |
 | D-624 | 2026-11-26 | The way in and around is the report: every Settings page and Assistants answer first in one sentence on a shared frame, Accounts reads as rows that open their form beside the page with a delete asked at its button, Assistants' tools open by group beside it, the front door and a document with no ledger say what to do in words with Open… added, the guide's first step names Read files and leaves its note where it stood, the waiting notice speaks only of what changes the month, and the palette says what it can do offline | M64 |
+| D-625 | 2026-11-26 | The engine's formats are the report: the formats list and a format's table each answer first in one sentence (how many kinds of things, how many rows and whether they are right), what waits is one strip below, the shape, a rule set's preview and a new view or chart open beside the rows, and a row deletes at once with Undo near it (the next entry opening after a delete from its entry) while a format's delete, which cannot be undone, asks at its button | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1599,6 +1600,43 @@ every read-only `ChoiceField` (the taste check's) — it changes a kit default, 
 `src/App.tsx`, `src/ui/guide/Guide.tsx`, `src/data/packs/ledger/guide.ts`, `src/ui/Notices.tsx`,
 `src/ui/commands.ts`, the catalogue's `settings`, `chrome`, `guide` and `palette` (en, he),
 `.fc-guide-toast` in `tokens.css`, `docs/redesign/budget.json` (seven routes off `exempt`).
+
+## D-625 · 2026-11-26 · The engine's formats are the report: the formats list and a format's table each answer first in one sentence (how many kinds of things, how many rows and whether they are right), what waits is one strip below, the shape, a rule set's preview and a new view or chart open beside the rows, and a row deletes at once with Undo near it (the next entry opening after a delete from its entry) while a format's delete, which cannot be undone, asks at its button <a id="d-625"></a>
+
+**Context.** M64 U13 redesigned the engine's formats list, a format's table, its entry and its
+input view after Home (D-616) and Transactions (D-618), on `custom.emd` and `project.emd`. The
+maintainer named one thing himself (2026-11-25): deleting a row from its entry, the row chosen
+inside a filter, opened a confirmation in a bar at the foot of the screen. D-617 says a delete
+deletes at once with an Undo near where it happened, and asks only where no undo exists — at the
+button, naming the thing.
+
+**Decision.** *Formats* says *This document keeps N kinds of things* in one sentence, with the rows
+in all and whether their claims hold under it, and lists the formats as a data table (rows and
+columns right-aligned; *Last changed* and *Claims* drawn only when some format has one); a change
+waiting for an answer, a format this build cannot read and a table nothing declares are the
+waiting strip, each opening beside the list. Edit is cut (it went where the title goes). *A
+format's table* says how many rows, how many match a filter, how many things look wrong and
+whether the claims hold, in one sentence under its title; one line under it keeps its place and
+says the columns and readers, or *Deleted X · Undo*. With no claim yet, the empty *Claims* band
+is one *Add a claim* action in that line. The shape editor (a column, the claims, the order), a
+rule set's preview and the view and chart forms from the + open in the side panel, never as a
+band at the foot. **A row's Delete deletes at once** — from the table (its icon, or Delete on the
+cursor's row) and from its entry — and *Deleted X · Undo* (Ctrl+Z too) stands in the table's line
+or in the entry's bar; from an entry, the next entry the list holds opens (its filter and order
+kept), else the one before, else the view it came from. The deleted rows are a stack, so a second
+delete never makes the first permanent, and Undo writes the row back whole, its id included,
+through the `insertRows` a row is added by. A row another entry links to is refused at its own
+Delete, naming what links to it; a format's Delete asks at its button (`ConfirmAtButton`), since
+its table cannot come back.
+
+**Why.** The answer first and the detail beside the page is the approved pattern (D-616, D-618);
+an Undo where the delete happened is what a desktop app has taught people, and a bar at the foot
+of the screen is what the maintainer found strange.
+
+**Rejected.** A confirmation before every row delete (an undo exists, so it asks for nothing); a
+new engine write to restore a row (re-inserting with its id is the write the screen and the tools
+already share, so parity holds); turning the table's cursor Delete off (the sheet's stored rows are
+not edited in their cells, so Delete on a row means the row, as in a mail list).
 
 ## Related
 

@@ -30,6 +30,9 @@ import { paychecks as enPaychecks } from './en/paychecks.ts'
 import { paychecks as hePaychecks } from './he/paychecks.ts'
 import { wealth as enWealth } from './en/wealth.ts'
 import { wealth as heWealth } from './he/wealth.ts'
+
+import { formats as enFormats } from './en/formats.ts'
+import { formats as heFormats } from './he/formats.ts'
 import type { Language } from './language.ts'
 
 /**
@@ -70,6 +73,9 @@ export const ENGLISH = {
   paychecks: enPaychecks,
   // M64 U10 (D-622): Wealth — net worth, funds, goals and debts.
   wealth: enWealth,
+
+  // M64 U13 (D-625): the engine's formats list, a format's table and its entry.
+  formats: enFormats,
 } as const
 
 export type English = typeof ENGLISH
@@ -102,6 +108,8 @@ export const HEBREW: { readonly [A in Area]?: Translation<A> } = {
   palette: hePalette,
   paychecks: hePaychecks,
   wealth: heWealth,
+
+  formats: heFormats,
 }
 
 const CATALOGUES: Readonly<Record<Language, unknown>> = { en: ENGLISH, he: HEBREW }

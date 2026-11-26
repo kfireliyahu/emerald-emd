@@ -45,7 +45,6 @@ import { AddMember, isPercentFigure, Markdown, MARKED, PickMenu, Shown, type Par
 import { FileField, FileLink } from './FileLink.tsx'
 import { useDismiss } from '@/ui/components/useDismiss.ts'
 import { MembersField } from './MembersField.tsx'
-import { Reveal } from '@/ui/motion/Reveal.tsx'
 import { useMark } from '@/ui/motion/useMark.ts'
 import { useChanges } from '@/ui/useChanges.ts'
 import { BalanceProof, verdictInk } from '@/ui/formats/Balance.tsx'
@@ -55,6 +54,7 @@ import { Button } from '@/ui/components/Button.tsx'
 import type { LinkChoice, LinkedRefusal, NewLinked } from '@/ui/formats/linkTargets.ts'
 import { ChoiceField, type Choice } from '@/ui/components/ChoiceField.tsx'
 import { IconAction } from '@/ui/components/IconAction.tsx'
+import { DeleteAtOnce, type DeleteRefusal } from '@/ui/formats/DeleteAtOnce.tsx'
 import { NativePicker, type PickerHandle } from '@/ui/components/NativePicker.tsx'
 import { CurrencyField, TypedHint, useTyped } from '@/ui/formats/TypedField.tsx'
 import { parseMarkdown } from '@/ui/formats/markdown.ts'
@@ -258,7 +258,8 @@ export function EntryView({
   pager,
   list,
   written,
-  below,
+  deleted,
+  deleteLabel,
   onChange,
   onCommit,
   onRevert,
@@ -332,8 +333,10 @@ export function EntryView({
   list?: { readonly hidden: boolean; readonly onToggle: () => void } | undefined
   /** When this visit last wrote, as `09:41`. */
   written: string | undefined
-  /** The delete question, when it is being asked. */
-  below?: ReactNode
+  /** *Deleted · Undo* for the entry just deleted from here (M64 U13, D-625), or nothing. */
+  deleted?: ReactNode
+  /** Delete, naming the entry: `Delete Book Nook`. */
+  deleteLabel?: string | undefined
   /** Typing: the draft as it stands, written by nothing yet. */
   onChange: (next: RowDraft) => void
   /** A field left or a pick made: the draft to write, if it is a row that exists. */
@@ -352,7 +355,11 @@ export function EntryView({
   /** What the back link says: the view the entry was opened from — `List`, `Board` — or the format's title for its table (M53 U5). */
   backLabel?: string | undefined
   onAdd: () => void
-  onDelete: (() => void) | undefined
+  /**
+   * Delete this entry at once (M64 U13, D-625, after D-617) — the next one opens
+   * and the bar says *Deleted · Undo* — or the refusal, said at the button.
+   */
+  onDelete: (() => DeleteRefusal | undefined) | undefined
   /** Open a row of a format in this same view. */
   onOpen: (format: string, id: string) => void
 }) {
@@ -603,9 +610,9 @@ export function EntryView({
           ← <Bidi>{backLabel ?? declaration.title}</Bidi>
         </button>
         {fresh ? (
-          <span className="font-medium">
+          <h1 className="m-0 text-body font-medium">
             A new <Bidi>{one}</Bidi>
-          </span>
+          </h1>
         ) : (
           pager !== undefined && (
             <span
@@ -629,7 +636,7 @@ export function EntryView({
           <span className="max-w-prose text-caption text-ink-secondary">{locked}</span>
         )}
         <span className="ms-auto flex items-center gap-1.5">
-          {written !== undefined && <span className="text-caption text-ink-secondary">Written {written}</span>}
+          {deleted ?? (written !== undefined && <span className="text-caption text-ink-secondary">Written {written}</span>)}
           {!readOnly && ordered.some((column) => column !== layout.title) && (
             <FieldsList
               open={fieldsOpen}
@@ -652,20 +659,14 @@ export function EntryView({
               onReset={() => onOrder(undefined)}
             />
           )}
-          {onDelete !== undefined && (
-            <IconAction label="Delete" tone="negative" onClick={onDelete}>
-              <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
-            </IconAction>
-          )}
+          {onDelete !== undefined && <DeleteAtOnce label={deleteLabel ?? 'Delete'} onDelete={onDelete} />}
         </span>
       </div>
 
       <div ref={page} className="@container min-h-0 flex-1 overflow-auto">
         <div className="mx-auto flex max-w-[1120px] flex-col gap-7 px-6 pt-7 pb-16">
           <header className="flex flex-col gap-2.5 border-b border-hairline pb-5">
-            <div className="fc-label">
-              <Bidi>{declaration.title}</Bidi>
-            </div>
+            {/* No label naming the format: the bar's way back and the list beside already do (M64 U13). */}
             {layout.title !== undefined && field(layout.title, 'title')}
             {header.length > 0 && (
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -774,9 +775,7 @@ export function EntryView({
         </div>
       </div>
 
-      {/* A panel under the entry makes its room (M39, src/ui/motion/Reveal.tsx). */}
-      <Reveal>{below}</Reveal>
-      {fresh && !readOnly && below === undefined && (
+      {fresh && !readOnly && (
         <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-t border-hairline bg-elevated px-6 py-2.5">
           <Button variant="primary" icon="add" onClick={add}>
             Add
