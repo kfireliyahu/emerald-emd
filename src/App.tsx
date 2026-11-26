@@ -45,6 +45,7 @@ import { FormatRows } from '@/ui/screens/FormatRows.tsx'
 import { FormatPage, FormatReady, FormatRoadmap } from '@/ui/screens/FormatLinkViews.tsx'
 import { ReadFiles } from '@/ui/screens/ReadFiles.tsx'
 import { Plan } from '@/ui/screens/Plan.tsx'
+import { PlanYear } from '@/ui/plan/PlanYear.tsx'
 import { ReadSlips } from '@/ui/paychecks/ReadSlips.tsx'
 import { SlipBatchBar } from '@/ui/paychecks/SlipBatchBar.tsx'
 import { ReadFilesBar } from '@/ui/import/ReadFilesBar.tsx'
@@ -529,7 +530,11 @@ function RoutedViews() {
         {/* **Plan** is the section docs/06 files paychecks under, and building it
             is the answer to D-044: sections with sub-navs, not the sidebar
             (D-054). The top nav gets shorter by gaining a screen. */}
-        <Route path="/plan" element={<Plan />} />
+        <Route path="/plan" element={<Section />}>
+          <Route index element={<Plan />} />
+          {/* The year against the plan, Plan's second view (M64 F12, D-631). */}
+          <Route path="year" element={<PlanYear />} />
+        </Route>
         {/* Fixed expenses and the splitter were two pages of it (M28 U7, D-319);
             a bookmark to either lands on the one page they became. */}
         <Route path="/plan/fixed" element={<Navigate to="/plan" replace />} />

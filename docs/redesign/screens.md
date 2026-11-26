@@ -250,6 +250,9 @@ Categories (168) and Plan.
 - **One click behind:** *Months on this plan* (behind the plan's name); the cushion (behind its
   figure); the bill candidates (behind their count); the bucket editor (behind each bucket — the
   bar and the planned/got figures stay).
+- **Year** (`#/plan/year`, M64 F12, D-631): the plan's second tab — *how did the year go against the
+  plan?* in one sentence, each bucket a meter of the year's actual against the sum of its months'
+  plan, and a bucket's months beside the page.
 
 ### Wealth overview — `#/wealth`
 

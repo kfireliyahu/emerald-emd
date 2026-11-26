@@ -529,6 +529,7 @@ written out here.
 | D-627 | 2026-11-26 | An entry and an input view read as a form: every writable field wears a hairline under it at rest, Add sits under the fields, the list's + is the one way into a new entry, an input view's Fields is a form in the side panel, the table's filter is a funnel beside a boxed search, and the formats screens say every word through the catalogue, in English and Hebrew | M64 |
 | D-628 | 2026-11-26 | Undo of a delete on Rules and Categories brings the thing back whole — its id, its place, its count, its colour, the built-in rules that went with it and the rows that named it — through the create that makes one, handed what the delete took, over an engine pair that reads a row before it goes and puts it back; the rule editor, the test box, re-applying and New category choose with ChoiceField and still take a paste | M64 |
 | D-629 | 2026-11-26 | Wealth's forms open beside the page and ask the few fields a person types first: the balance and its date for a fund's reading, said back in words against the last reading as it is typed, with the rest of the report one verb further and grown in place; the fund, goal, movement, debt and payment forms take the same shape (`PanelForm`), and the details take the report's ink and ramp | M64 |
+| D-631 | 2026-11-26 | Plan has a Year beside its month, as Home has: each bucket's year is the sum of its months — what each month's plan gave it against what it got, January through the last month that is over, on the plan each month is on and Home's month basis — said first in words with the categories apart from the goals and debts, each bucket a meter whose months open beside the page, a month nobody could measure left out of both sums, and `plan_month` with a `year` answering the same; Plan's bar runs from the inline start, so in Hebrew it mirrors with its drag and arrow keys while the ring stays a clock | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1857,6 +1858,49 @@ fees differently, and a sentence that is sometimes wrong is worse than none.
 **Left.** The details' own words (fund, goal and debt panes, fee impact, the deposit check, the net
 worth row, the goal form's where-picker and cost basis) are still English: M64 F26. Focus after a
 form opened from a row's menu falls to the page, since the menu item that opened it is gone.
+
+## D-631 · 2026-11-26 · Plan has a Year beside its month, as Home has: each bucket's year is the sum of its months — what each month's plan gave it against what it got, January through the last month that is over, on the plan each month is on and Home's month basis — said first in words with the categories apart from the goals and debts, each bucket a meter whose months open beside the page, a month nobody could measure left out of both sums, and `plan_month` with a `year` answering the same; Plan's bar runs from the inline start, so in Hebrew it mirrors with its drag and arrow keys while the ring stays a clock <a id="d-631"></a>
+
+**Context.** M64 F12 and F1, built together because both are Plan's. The maintainer, 2026-11-26:
+*"in the plan i'd like a view that sums up the buckets of the year (meaning if i had a monthly bucket
+id like to see how much total in the year went to the bucket out of planned)."* Plan answered one
+month at a time; the year was nowhere. And Plan's bar forced `dir="ltr"`, so in Hebrew the split ran
+left to right while every column beside it mirrored (F1).
+
+**Decision.**
+
+1. **Plan's views are a tab strip, Month and Year** (`#/plan`, `#/plan/year`), drawn from `nav.ts`
+   like Home's — the same plan over a longer window, so a view, not a place.
+2. **A bucket's year is the sum of its months** (`planYear` in `src/domain/planYear.ts`, pure): each
+   month from January through the last month that is over (never past December) is worked out on
+   the plan *that month is on* (`planOnMonth`) and measured the way one month is
+   (`planAgainstActual`, on Home's month basis, D-607); the year adds them bucket by bucket. A month
+   a bucket cannot be measured in — a free bucket, a category's month with no statement — **stays
+   out of both its sums**, the rule `planVersusActual` keeps for one month, and is counted; a bucket
+   no month could measure says so instead of a meter. A month in another currency is left out.
+3. **The screen answers first, the categories apart from the goals and debts** (`planYearByKind`):
+   spending past a category's plan is a problem, and more into a goal or onto a debt than planned is
+   not, so one sum of both would call a paid-down loan overspending. *From January to October 2026,
+   the categories went ₪3,885 over what their months planned. Goals and debts got ₪12,400 more than
+   planned.* — then the categories' gap as the one display figure, then each bucket as a
+   `PlanAgainst` meter in the month's two columns. Only a category over its plan is red; under or on
+   it is said in words (a year that is over has nothing *left*), and a goal or debt says *more* or
+   *less*. A bucket opens its months beside the page (D-617): each month's plan, what it got, how far
+   over or under, and a total row that adds up to the meter. The year pages back; it pages forward
+   only to the newest year with a month that is over.
+4. **A conversation asks the same** (D-227): `plan_month` with a `year` reads it and writes nothing
+   — the sentence, then a row per bucket with the months it went over and under. Both read
+   `planYearAgainstActual`, so they cannot disagree.
+5. **Plan's bar reads the way the page does** (F1): its segments run from the inline start, a drag
+   is measured from the right edge in Hebrew, ← grows the bucket there (`arrowStep`) and ↑/↓ stay
+   grow/shrink; the connector under the header band mirrors with it. **The ring is a clock face and
+   keeps `dir="ltr"`**, and so does the morph between them, which therefore starts from the
+   unmirrored bar in Hebrew.
+
+**Rejected.** *The year on the plan on screen only*: a month on another plan would have been held
+against a split it never had. *The current month in the sum*: a month half over reads as under its
+plan by the half not yet spent. *A month with no statement counted as nothing got*: it would report
+the bucket under its plan by exactly the months nobody could check.
 
 ## Related
 

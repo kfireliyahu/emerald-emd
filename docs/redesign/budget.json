@@ -61,6 +61,14 @@
       "colours": 16,
       "screens": 2.7
     },
+    "#/plan/year": {
+      "words": 130,
+      "blocks": 4,
+      "figures": 4,
+      "actions": 14,
+      "colours": 11,
+      "screens": 1.5
+    },
     "#/wealth": {
       "words": 165,
       "blocks": 4,

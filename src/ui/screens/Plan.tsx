@@ -95,7 +95,7 @@ import { FixedExpenseEditor } from '@/ui/fixed/FixedExpenseEditor.tsx'
 import { Pager } from '@/ui/home/parts.tsx'
 import { useCategoryPalette } from '@/ui/components/CategoryMark.tsx'
 import { BucketEditor } from '@/ui/plan/BucketEditor.tsx'
-import { sectionBuckets } from '@/ui/plan/bucketGroups.ts'
+import { columnsOf, sectionBuckets } from '@/ui/plan/bucketGroups.ts'
 import { eligibleParents } from '@/ui/categories/parentFilter.ts'
 import { BillActions, Candidates, EndedBills, FixedSection } from '@/ui/plan/FixedSection.tsx'
 import { MonthRow } from '@/ui/plan/MonthRow.tsx'
@@ -1290,20 +1290,6 @@ function AgainstLine({ against }: { readonly against: PlanActual | undefined }) 
         ? t(versus.withoutBasis === 1 ? 'plan.against.unmeasuredOne' : 'plan.against.unmeasuredMany', { n: versus.withoutBasis })
         : ''),
   )
-}
-
-/**
- * The bucket lists as the page's two columns: one per share when the plan has
- * Needs, Wants and Saving, and one list cut in two, in order, when it has none.
- */
-function columnsOf<S extends { readonly name: string; readonly rows: readonly unknown[] }>(sections: readonly S[]): readonly S[] {
-  const only = sections[0]
-  if (sections.length !== 1 || only === undefined || only.name !== '' || only.rows.length < 4) return sections
-  const half = Math.ceil(only.rows.length / 2)
-  return [
-    { ...only, rows: only.rows.slice(0, half) },
-    { ...only, rows: only.rows.slice(half) },
-  ]
 }
 
 /** An amount inside the answer: whole units, medium, kept on one line. */
