@@ -5347,6 +5347,16 @@ answer: The details spend the list's steps (12, 14, 16, 24, 28, 40, 88): a label
 state: live
 affects: "docs/09-decision-log.md\ndocs/redesign/budget.json\nscripts/probe-screens.mjs\nsrc/ui/probe.ts\nsrc/ui/probe.test.ts\nsrc/ui/debts/BalanceLine.tsx\nsrc/ui/savings/WherePicker.tsx\nsrc/ui/screens/DebtDetail.tsx\nsrc/ui/screens/DepositCheck.tsx\nsrc/ui/screens/FeeImpact.tsx\nsrc/ui/screens/FundDetail.tsx\nsrc/ui/screens/GoalDetail.tsx\nsrc/ui/wealth/parts.tsx\nsrc/data/repositories/holdingReadingRepository.ts\nsrc/data/repositories/holdingReading.test.ts\nsrc/data/importer/holdingStatement.ts\nsrc/plugin/tools/holdingReadings.ts\nsrc/ui/savings/HoldingReadings.tsx\nsrc/i18n/en/wealth.ts\nsrc/i18n/he/wealth.ts"
 
+### D-640
+date: 2026-11-26
+milestone: M64
+scope: engine
+title: A debt's payoff month is one calculation, `payoffMonth` in `src/domain/debt.ts`, which the debt's detail and the Debts list both read: the payments still to make start in the month after the newest one already recorded, or this month while this month's has not landed
+question: The Car loan's detail said Clear by February 2027 and the Debts list said Paid off March 2027 at the same 2,000 a month. Which is right, and where is the one calculation?
+answer: The list. On year.emd (built 25 November) the loan is 36,000 paid 2,000 a month for fourteen months (standing 1,000 on the 12th, Plan's 1,000 extra on the 1st), so 8,000 is left: four payments. November's two are already in the balance, so the four are December to March. projectPayoff took from + months - 1 (counting November as a payment month) and debtStatus from + months (right only once this month's payment is in). Now paymentsToClear(left, each) counts the payments (ceiling on minor units; 0 when nothing is left; nothing when nothing goes in or past 600 months) and payoffMonth(from, payments, lastPaid) starts after the newest payment month when that is this month or later, else this month. projectPayoff (detail, debts and debt_projection tools) and debtStatus (list) both call them; DebtLine carries lastPaid from lastPaymentMonth. Pinned in debt.test.ts, debtPlanRepository.test.ts and year.test.ts (both screens' repositories say March 2027 on the synthetic year).
+state: live
+affects: "src/domain/debt.ts\nsrc/domain/debtPlan.ts\nsrc/data/repositories/debtPlanRepository.ts\nsrc/ui/screens/DebtDetail.tsx\nsrc/ui/screens/Debts.tsx"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6932,6 +6942,15 @@ state: applied
 answered_by: D-628
 became_unit: M64 F5
 
+### M64 F58 built: a debt's payoff month is one calculation on its detail and its list (D-640), to land
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-26
+body: "M64 F58 is built on worktree-agent-a48147322701b5dbf at 3580c66. Decision D-640. docs:check green but for D-640's row, carried here.\n\n```json\n{\"unit\": \"M64 F58\", \"commit\": \"3580c66\", \"branch\": \"worktree-agent-a48147322701b5dbf\", \"files\": \"docs/09-decision-log.md\\nsrc/domain/debt.ts\\nsrc/domain/debt.test.ts\\nsrc/domain/debtPlan.ts\\nsrc/data/repositories/debtPlanRepository.ts\\nsrc/data/repositories/debtPlanRepository.test.ts\\nsrc/demo/year.test.ts\", \"decisions\": [{\"ref\": \"D-640\", \"date\": \"2026-11-26\", \"milestone\": \"M64\", \"scope\": \"engine\", \"state\": \"live\", \"title\": \"A debt's payoff month is one calculation, `payoffMonth` in `src/domain/debt.ts`, which the debt's detail and the Debts list both read: the payments still to make start in the month after the newest one already recorded, or this month while this month's has not landed\", \"question\": \"The Car loan's detail said Clear by February 2027 and the Debts list said Paid off March 2027 at the same 2,000 a month. Which is right, and where is the one calculation?\", \"answer\": \"The list. On year.emd (built 25 November) the loan is 36,000 paid 2,000 a month for fourteen months (standing 1,000 on the 12th, Plan's 1,000 extra on the 1st), so 8,000 is left: four payments. November's two are already in the balance, so the four are December to March. projectPayoff took from + months - 1 (counting November as a payment month) and debtStatus from + months (right only once this month's payment is in). Now paymentsToClear(left, each) counts the payments (ceiling on minor units; 0 when nothing is left; nothing when nothing goes in or past 600 months) and payoffMonth(from, payments, lastPaid) starts after the newest payment month when that is this month or later, else this month. projectPayoff (detail, debts and debt_projection tools) and debtStatus (list) both call them; DebtLine carries lastPaid from lastPaymentMonth. Pinned in debt.test.ts, debtPlanRepository.test.ts and year.test.ts (both screens' repositories say March 2027 on the synthetic year).\", \"affects\": \"src/domain/debt.ts\\nsrc/domain/debtPlan.ts\\nsrc/data/repositories/debtPlanRepository.ts\\nsrc/ui/screens/DebtDetail.tsx\\nsrc/ui/screens/Debts.tsx\"}], \"review_entries\": [], \"report\": \"Which month was right: the list's March 2027. year.emd's Car loan has 8,000 left at 2,000 a month (the standing 1,000 on the 12th and Plan's 1,000 extra written on the 1st), four payments; November's two are already subtracted, so they are December, January, February, March. The detail's projectPayoff used from + months - 1, so it counted November as a fifth-to-last payment month that was already paid; the list's debtStatus used from + months, which is right only once this month's payment is in (on the 5th of a month it would be a month late). Neither rule held in general, so the one calculation counts from after the newest payment month: payoffMonth and paymentsToClear in src/domain/debt.ts, read by projectPayoff and debtStatus (DebtLine.lastPaid). No screen file changed: both screens print the repositories' months, which now come from one function. Tests: debt.test.ts (5 new cases), debtPlanRepository.test.ts (the plain-addition status now Oct-Apr with nothing paid this month, Nov-May with October's in), year.test.ts (detail and list both March 2027, rate 2,000 each way) green; typecheck green; privacy green; related run's only failures were load timeouts in plugin watch/format tests, green when rerun. Money stays minor units throughout. Left: the two screens still choose their monthly figure apart (detail: observed lately, else expected; list: standing order plus Plan's extra) - asked as M64 Q75.\", \"follow_ups\": [{\"kind\": \"question\", \"ref\": \"M64 Q75\", \"question\": \"A debt's detail projects on what was paid lately (else the debt's expected payment) while the Debts list projects on the standing order plus Plan's extra. On year.emd they agree at 2,000 a month, but a debt paid more or less than its standing order, or with an extra not yet paid, gets two months again. Should both screens use one monthly figure, and which: what was paid lately, or the standing order plus the extra?\"}]}\n```"
+refs: M64 F58
+state: applied
+answered_by: D-640
+became_unit: M64 F58
+
 ### M64 F6 landing proposal: the rule forms and New category choose with ChoiceField (D-628)
 from: F:/projects/emerald/docs/memory.emd
 sent_on: 2026-11-26
@@ -7858,6 +7877,10 @@ state: open
 
 ### M64 Q7
 question: Home's Taxes panel could link to Paychecks: navigate('/paychecks', {state: {month: 'YYYY-MM', panel: 'tax'}}) opens that month's taxes by deduction type. Home's files were not U8's to edit; wire it in a Home follow-up?
+state: open
+
+### M64 Q75
+question: A debt's detail projects on what was paid lately (else the debt's expected payment) while the Debts list projects on the standing order plus Plan's extra. On year.emd they agree at 2,000 a month, but a debt paid more or less than its standing order, or with an extra not yet paid, gets two months again. Should both screens use one monthly figure, and which: what was paid lately, or the standing order plus the extra?
 state: open
 
 ### M64 Q8
@@ -19278,11 +19301,16 @@ brief: Found in M64 F36: no demo document (project.emd, custom.emd, year.emd) ha
 milestone: Later
 scope: ui
 title: A debt's payoff month is one calculation on its detail and its list
-state: in_progress
+landed: 2026-11-26
+decision: D-640
+state: built
 brief: Found in M64 F46's taste check on year.emd: #/wealth/debts/<id> (Car loan) says it is cleared by February 2027 ('When it runs out'), while the Debts list's sentence beside it says paid off in March 2027 at the same 2,000 a month. Find which of payoffSentence (DebtDetail.tsx) and the list's sentence (Debts.tsx) is right, make both read one domain function, and pin it with a test. Files: src/ui/screens/DebtDetail.tsx, src/ui/screens/Debts.tsx, src/domain/debt.ts.
+files: "docs/09-decision-log.md\nsrc/domain/debt.ts\nsrc/domain/debt.test.ts\nsrc/domain/debtPlan.ts\nsrc/data/repositories/debtPlanRepository.ts\nsrc/data/repositories/debtPlanRepository.test.ts\nsrc/demo/year.test.ts"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-a48147322701b5dbf
+commit: 3580c66
+report: Which month was right: the list's March 2027. year.emd's Car loan has 8,000 left at 2,000 a month (the standing 1,000 on the 12th and Plan's 1,000 extra written on the 1st), four payments; November's two are already subtracted, so they are December, January, February, March. The detail's projectPayoff used from + months - 1, so it counted November as a fifth-to-last payment month that was already paid; the list's debtStatus used from + months, which is right only once this month's payment is in (on the 5th of a month it would be a month late). Neither rule held in general, so the one calculation counts from after the newest payment month: payoffMonth and paymentsToClear in src/domain/debt.ts, read by projectPayoff and debtStatus (DebtLine.lastPaid). No screen file changed: both screens print the repositories' months, which now come from one function. Tests: debt.test.ts (5 new cases), debtPlanRepository.test.ts (the plain-addition status now Oct-Apr with nothing paid this month, Nov-May with October's in), year.test.ts (detail and list both March 2027, rate 2,000 each way) green; typecheck green; privacy green; related run's only failures were load timeouts in plugin watch/format tests, green when rerun. Money stays minor units throughout. Left: the two screens still choose their monthly figure apart (detail: observed lately, else expected; list: standing order plus Plan's extra) - asked as M64 Q75.
 
 ### M64 F59
 milestone: Later
