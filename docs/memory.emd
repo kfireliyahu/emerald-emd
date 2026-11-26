@@ -18206,9 +18206,12 @@ brief: PlanBar forces dir=ltr, so in Hebrew the split runs left to right while e
 milestone: M64
 scope: ui
 title: An entry and an input view read as a form: fields with an edge, Add under the fields, one way into a new entry, the input view's Fields beside it
-state: planned
+state: in_progress
 brief: U13's taste check (D-625) found: entry and input fields have no visible edge, the date placeholder is cut off, the amount floats far from its label; Add and Cancel sit in a band at the foot about 580px below the last field; four ways to add a new entry (list +, Add a card charge, the draft row, Add); the input view's Field/Ask/Default designer is an inline column, not the SidePanel form D-617 asks for; Filter by and Search look alike side by side on the table; every empty foot row prints its currency. Fix within the kit (no new defaults), on custom.emd.
 files: "src/ui/formats/EntryView.tsx\nsrc/ui/formats/InputView.tsx\nsrc/ui/formats/EntryList.tsx\nsrc/ui/formats/RowSheet.tsx"
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 paths: "src/ui/formats/EntryView.tsx\nsrc/ui/formats/InputView.tsx\nsrc/ui/formats/EntryList.tsx\nsrc/ui/formats/RowSheet.tsx\nsrc/ui/formats/FilterBand.tsx"
 
 ### M64 F11
@@ -18271,30 +18274,42 @@ paths: src/ui/components/ src/ui/charts/ src/ui/Notices.tsx src/ui/theme/tokens.
 milestone: M64
 scope: ui
 title: Wealth's details and forms in the redesign
-state: planned
+state: in_progress
 brief: "U10 rebuilt the four Wealth screens but left their details: the fund, goal and debt panes, the net worth row's panel (NetWorthOpened), FeeImpact's and DepositCheck's insides, and the six full-page editors (fund, reading, goal, deposit, debt, payment). Move the multi-field editors into the SidePanel as forms (their grids by container width, not the viewport), give the details the report's look (no ink-tertiary text, no off-ramp sizes from wealth/parts.tsx), and put their words in the wealth catalogue, en and he. Files: src/ui/wealth/NetWorthOpened.tsx, src/ui/screens/FundDetail.tsx, src/ui/screens/GoalDetail.tsx, src/ui/screens/DebtDetail.tsx, src/ui/screens/FeeImpact.tsx, src/ui/screens/DepositCheck.tsx, src/ui/funds/FundEditor.tsx, src/ui/funds/SnapshotEditor.tsx, src/ui/savings/GoalEditor.tsx, src/ui/savings/DepositEditor.tsx, src/ui/debts/DebtEditor.tsx, src/ui/debts/PaymentEditor.tsx, src/ui/wealth/parts.tsx.\n\nMaintainer, 2026-11-26: \"adding readings to funds and such, looks like the old, same as the paychecks by hand.\" Adding a fund reading (SnapshotEditor) is the first form to make easy, as F14 does for a paycheck: the few fields a person types first, the rest only if wanted, said in words as they type."
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 
 ### M64 F5
 milestone: M64
 scope: ui
 title: Undo brings a deleted rule or category back whole
-state: planned
+state: in_progress
 brief: Undo on Rules and Categories (M64 U11) re-creates the thing with createRule and createCategory: a rule comes back at its place in the order but with its hit count reset and a new id; a category comes back with its name, kind, parent and colour but at the end of its siblings, and a built-in rule that pointed at it stays gone. Decide whether a restore that keeps the id, the count and the position is worth a repository write (and its plugin half, D-234). Files: src/ui/screens/Rules.tsx, src/ui/screens/Categories.tsx, src/data/repositories/categoryRuleRepository.ts, src/data/repositories/categoryRepository.ts.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 
 ### M64 F6
 milestone: M64
 scope: ui
 title: The rule editor, the test box, re-applying and New category choose with ChoiceField
-state: planned
+state: in_progress
 brief: Moved into the side panel by M64 U11, these still draw the platform's select (a rule's kind, account and currency; the test box's currency and account; re-apply's account and month; New category's kind), against Choices are ChoiceField. Replace each with ChoiceField, keeping paste into the field. Files: src/ui/rules/RuleEditor.tsx, src/ui/rules/TestBox.tsx, src/ui/rules/ReapplyPanel.tsx, src/ui/screens/Categories.tsx.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 
 ### M64 F9
 milestone: M64
 scope: ui
 title: The engine's formats screens translated: every word of the table, entry, input view, sheet, filter band and shape panel in the catalogue, en and he
-state: planned
+state: in_progress
 brief: U13 (D-625) put only its new words in src/i18n/*/formats.ts; FormatRows.tsx, EntryView.tsx, RowSheet.tsx, FilterBand.tsx, InputView.tsx, ShapePanel.tsx, WhatLooksWrong.tsx and the rest of DeclaredFormats.tsx still say English inline. Move them to the formats area with t(), add the files to src/i18n/words.test.ts, and wrap mixed runs (refs, column names in WhatLooksWrong, the filter placeholder) in Bidi so the Hebrew page reads in order. Check with probe:screens --lang he on custom.emd and project.emd.
 files: "src/ui/screens/FormatRows.tsx\nsrc/ui/formats/EntryView.tsx\nsrc/ui/formats/RowSheet.tsx\nsrc/ui/formats/FilterBand.tsx\nsrc/ui/formats/InputView.tsx\nsrc/i18n/en/formats.ts"
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 paths: "src/ui/screens/FormatRows.tsx\nsrc/ui/screens/DeclaredFormats.tsx\nsrc/ui/formats/EntryView.tsx\nsrc/ui/formats/RowSheet.tsx\nsrc/ui/formats/FilterBand.tsx\nsrc/ui/formats/InputView.tsx\nsrc/ui/formats/ShapePanel.tsx\nsrc/ui/formats/WhatLooksWrong.tsx\nsrc/i18n/en/formats.ts\nsrc/i18n/he/formats.ts"
 
 ### M64 U1
@@ -18385,10 +18400,13 @@ report: Formats and a format's table answer first in one sentence; detail and fo
 milestone: M64
 scope: ui
 title: The engine's views redesigned: board, list, roadmap, ready, dashboards, agenda, calendar and connections
-state: planned
+state: in_progress
 brief: "Follow the redesign-screen skill (U5) and DESIGN.md, with the jobs from U2's inventory. The routes leave the budget's exempt list. The frame that draws views inside a conversation (src/frame/) wears a host's look (its rule stays), so check it still reads there.\n\nMaintainer, 2026-11-25: every view's delete, move and bulk action behaves as ordinary apps do (D-617): delete at once with an undo, a question only where no undo is possible and then anchored to the button, never a bar at the bottom of the screen."
 files: Every view of a format beyond its table, and the document's dashboard and connections.
 blocks: ["M64 U13"]
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 paths: "src/ui/screens/Dashboard.tsx\nsrc/ui/screens/Agenda.tsx\nsrc/ui/screens/Calendar.tsx\nsrc/ui/screens/Connections.tsx\nsrc/ui/screens/FormatLinkViews.tsx\nsrc/ui/formats/BoardView.tsx\nsrc/ui/formats/ListView.tsx\nsrc/ui/formats/RollupView.tsx\nsrc/ui/formats/Dashboard.tsx\nsrc/ui/formats/ConnectionGraph.tsx\nsrc/ui/formats/ConnectionPanel.tsx\nsrc/ui/formats/LinkViews.tsx"
 
 ### M64 U15
